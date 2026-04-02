@@ -4,6 +4,10 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from rest_framework import permissions, serializers, status
 from rest_framework.response import Response
 
+from api.mixins import RetrieveUpdateViewSet
+from users.models import Child
+from users.serializers import ChildSerializer
+
 
 @extend_schema_view(
     create=extend_schema(
@@ -17,6 +21,7 @@ from rest_framework.response import Response
                 "last_name": serializers.CharField(),
                 "patronymic_name": serializers.CharField(),
                 "date_of_birth": serializers.DateField(),
+                "child": ChildSerializer(),
             },
         ),
     ),
@@ -47,13 +52,21 @@ class UserViewSet(DjoserUserViewSet):
 
     def create(self, request, *args, **kwargs):
         """Доступ только для неавторизованных пользователей."""
+        child_data = request.data.pop("child", None)
+        child_serializer = ChildSerializer(data=child_data)
+        child_serializer.is_valid(raise_exception=True)
+        child_instance = child_serializer.save()
+        request.data["child"] = child_instance.id
         serializer = self.get_serializer(data=request.data)
         with transaction.atomic():
             if serializer.is_valid():
                 self.perform_create(serializer)
                 headers = self.get_success_headers(serializer.data)
+                child_instance.parent = serializer.instance
+                child_instance.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
             else:
+                child_instance.delete()
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
@@ -89,3 +102,20 @@ class UserViewSet(DjoserUserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class ChildViewSet(RetrieveUpdateViewSet):
+    """
+    Эндпоинты для работы с профилем ребенка.
+
+    Доступ только для авторизованных пользователей.
+    Пользователь может получить и изменить только профиль ребенка,
+    родителем которого он является.
+    """
+
+    queryset = Child.objects.all()
+    serializer_class = ChildSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(parent=self.request.user)

@@ -19,6 +19,8 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    """Пользователь-родитель."""
+
     first_name = models.CharField(
         verbose_name="Имя",
         max_length=50,
@@ -86,6 +88,63 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class Child(models.Model):
+    """Данные ребенка."""
+
+    parent = models.OneToOneField(
+        User,
+        related_name="child",
+        verbose_name="Родитель",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    first_name = models.CharField(
+        verbose_name="Имя",
+        max_length=50,
+        help_text="Обязательное поле. Не более 50 символов.",
+    )
+    last_name = models.CharField(
+        verbose_name="Фамилия",
+        max_length=50,
+        help_text="Обязательное поле. Не более 50 символов.",
+    )
+    patronymic_name = models.CharField(
+        verbose_name="Отчество",
+        max_length=50,
+        help_text="Обязательное поле. Не более 50 символов.",
+    )
+    date_of_birth = models.DateField(
+        verbose_name="Дата рождения",
+        help_text="Обязательное поле.",
+    )
+    school = models.CharField(
+        verbose_name="Школа",
+        max_length=100,
+        help_text="Обязательное поле.",
+    )
+    classroom = models.CharField(
+        verbose_name="Класс",
+        max_length=100,
+        help_text="Обязательное поле.",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Дата создания",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Дата обновления",
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = "Деталь"
+        verbose_name_plural = "Дети"
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

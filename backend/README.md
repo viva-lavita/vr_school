@@ -1,4 +1,4 @@
-![example workflow](https://github.com/viva-lavita/foodgram-project-react/actions/workflows/main.yml/badge.svg)
+![example workflow](https://github.com/viva-lavita/vr_school/actions/workflows/main.yml/badge.svg)
 
 [![GitHub%20Actions](https://img.shields.io/badge/-GitHub%20Actions-464646?style=flat-square&logo=GitHub%20actions)](https://github.com/features/actions)
 [![docker](https://img.shields.io/badge/-Docker-464646?style=flat-square&logo=docker)](https://www.docker.com)
@@ -9,10 +9,7 @@
 [![gunicorn](https://img.shields.io/badge/-gunicorn-464646?style=flat-square&logo=gunicorn)](https://gunicorn.org)
 [![Nginx](https://img.shields.io/badge/-NGINX-464646?style=flat-square&logo=NGINX)](https://nginx.org/ru)
 
-# drf-jwt_template
-
-Шаблон для нового проекта Django с JWT аутентификацией. Django 5 версии.
-Для использования этого шаблона в собственном проекте используйте кнопку `Use this template` в правом верхнем углу экрана.
+# vr_school project
 
 > Важно. У вас должен быть установлен пакетный менеджер uv. [Документация](https://docs.astral.sh/uv/getting-started/installation/#pypi).
 > Nginx и docker-compose настроены под next.js.
@@ -95,50 +92,11 @@ docker compose up
 
 Обратите внимание, .env файл на сервере создается заново, после каждого деплоя. Значение переменных для файла берется из Secrets репозитория. Необходимо ознакомиться со списком необходимых переменных в скрипте и создать эти переменные в Settings -> Secrets and variables -> Actions -> New repository secret.
 
-### Перевод
-
-Использование:
-
-```python
-from django.utils.translation import gettext_lazy as _
-
-
-class User(AbstractUser):
-    email = models.EmailField(
-        verbose_name='Email',
-        max_length=254,
-        unique=True,
-        help_text=_(
-            "Required. 254 characters or fewer. "
-            "Letters, digits and @/./+/-/_ only."
-        ),
-        error_messages={
-            "unique": _("A user with that email already exists."),
-        },
-    )
-```
-
-Для формирования файла перевода на русском используйте [команду](https://docs.djangoproject.com/en/5.2/ref/django-admin/#django-admin-makemessages):
-
-```bash
-django-admin makemessages --locale=ru
-```
-
-В файле backend/locale/ru/LC_MESSAGES/django.po пропишите переводы помеченных фраз и скомпилируйте итоговый .mo файл:
-
-```bash
-python manage.py compilemessages -l ru
-```
-
-Локаль меняется в settings.py в разделе INTERNATIONALIZATION. [Документация](https://docs.djangoproject.com/en/4.2/topics/i18n/)
-
-Данный функционал добавлен только для однообразности отображения модели юзера в админке, т.к. часть полей этой модели определено самим django именно в таком стиле.
-
 # Порядок запуска
 
 ## Запуск проекта локально
 
-1. Создайте репозиторий используя этот шаблон (кнопка `Use this template` в правом верхнем углу экрана) и клонируйте репозиторий.
+1. Клонируйте репозиторий.
 2. Перейдите в каталог `backend`, создайте и активируйте виртуальное окружение, загрузите зависимости:
 
     ```bash
@@ -148,6 +106,11 @@ python manage.py compilemessages -l ru
     ```
 
 3. Создайте в корне проекта файл `.env` использовав переменные из .env.example. Сгенерируйте и заполните SECRET_KEY.
+
+   ```bash
+   python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+   ```
+
 4. Создаем и проводим миграции:
 
     ```bash
