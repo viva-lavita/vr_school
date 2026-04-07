@@ -1,4 +1,4 @@
-![example workflow](https://github.com/viva-lavita/drf-jwt_template/actions/workflows/deploy.yml/badge.svg)
+![example workflow](https://github.com/viva-lavita/vr_school/actions/workflows/deploy.yml/badge.svg)
 
 [![GitHub%20Actions](https://img.shields.io/badge/-GitHub%20Actions-464646?style=flat-square&logo=GitHub%20actions)](https://github.com/features/actions)
 [![docker](https://img.shields.io/badge/-Docker-464646?style=flat-square&logo=docker)](https://www.docker.com)
@@ -9,10 +9,19 @@
 [![gunicorn](https://img.shields.io/badge/-gunicorn-464646?style=flat-square&logo=gunicorn)](https://gunicorn.org)
 [![Nginx](https://img.shields.io/badge/-NGINX-464646?style=flat-square&logo=NGINX)](https://nginx.org/ru)
 
-# drf-jwt_template
+# vr_school
 
-Шаблон для нового проекта Django с JWT аутентификацией. Django 5 версии.
-Для использования этого шаблона в собственном проекте используйте кнопку `Use this template` в правом верхнем углу экрана.
+Репозиторий сайта VR-школы.
+
+---
+
+### ТЗ
+
+### Макет
+
+### Сайт
+
+### Figma
 
 ---
 
