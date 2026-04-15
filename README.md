@@ -8,9 +8,6 @@
 [![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-464646?style=flat-square&logo=PostgreSQL)](https://www.postgresql.org)
 [![gunicorn](https://img.shields.io/badge/-gunicorn-464646?style=flat-square&logo=gunicorn)](https://gunicorn.org)
 [![Nginx](https://img.shields.io/badge/-NGINX-464646?style=flat-square&logo=NGINX)](https://nginx.org/ru)
-
----
-
 [![Next.js](https://img.shields.io/badge/-Next.js-464646?style=flat-square&logo=Next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/-React-464646?style=flat-square&logo=React)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/-TypeScript-464646?style=flat-square&logo=TypeScript)](https://www.typescriptlang.org/)
@@ -25,11 +22,9 @@
 
 ### ТЗ
 
-### Макет
+### [![Макет](https://www.figma.com/design/3JUgzspxSPlnTM0vo4hemh/Проект-Цифровая-школа?node-id=0-1&p=f)]
 
 ### Сайт
-
-### Figma
 
 ---
 
