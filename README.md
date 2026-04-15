@@ -22,7 +22,7 @@
 
 ### ТЗ
 
-### [![Макет](https://www.figma.com/design/3JUgzspxSPlnTM0vo4hemh/Проект-Цифровая-школа?node-id=0-1&p=f)]
+### [Макет](https://www.figma.com/design/3JUgzspxSPlnTM0vo4hemh/Проект-Цифровая-школа?node-id=0-1&p=f)
 
 ### Сайт
 
