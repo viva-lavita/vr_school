@@ -1,27 +1,73 @@
-.env.dev
-media/
-static/
+# Виртуальные окружения
 venv/
 .venv/
-logs/
-.gitignore
-.idea
-.vscode/
-.env
+
+# Кэши и временные файлы
+__pycache__/
+*.py[cod]
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
-.cache/
-.pytest_cache/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Системы контроля версий
 .git/
 .svn/
 .hg/
-tests/
-__pycache__/
-*.pyc
-Dockerfile
+CVS/
+
+# Локальные данные
+media/
+static/
+logs/
 db.sqlite3
-django.mo
-.next/
+*.db
+
+# Окружение и конфигурации
+.env
+.env.*
+.python-version
+
+# Фронтенд
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
 .ruff_cache/
+
+# ОС‑специфичные
+.DS_Store
+Thumbs.db
+
+# Тестирование
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+coverage.xml
+
+# Прочие временные файлы
+*.log
+*.tmp
+*.bak
