@@ -59,12 +59,9 @@ class User(AbstractUser):
             "max_length": "Email слишком длинный.",
         },
     )
-    post = models.CharField(
-        verbose_name="Должность",
-        max_length=70,
-        blank=True,
-        null=True,
-        help_text="Не более 50 символов.",
+    is_teacher = models.BooleanField(
+        verbose_name="Преподаватель",
+        default=False,
     )
     created_at = models.DateTimeField(
         verbose_name="Дата создания",
@@ -88,6 +85,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -145,6 +143,7 @@ class Child(models.Model):
     class Meta:
         verbose_name = "Деталь"
         verbose_name_plural = "Дети"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
