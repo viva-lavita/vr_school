@@ -22,3 +22,6 @@ __pycache__/
 Dockerfile
 db.sqlite3
 django.mo
+.next/
+node_modules/
+.ruff_cache/
