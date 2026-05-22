@@ -2,6 +2,49 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
+class School(models.Model):
+    """Школа."""
+
+    name = models.CharField(
+        verbose_name="Название",
+        max_length=100,
+        unique=True,
+        help_text="Не более 100 символов.",
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Школа"
+        verbose_name_plural = "Школы"
+        ordering = ["name"]
+
+
+class Class(models.Model):
+    """Класс."""
+
+    name = models.CharField(
+        verbose_name="Название",
+        max_length=100,
+        help_text="Не более 100 символов.",
+    )
+    school = models.ForeignKey(
+        School,
+        verbose_name="Школа",
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Класс"
+        verbose_name_plural = "Классы"
+        ordering = ["name"]
+        unique_together = ("name", "school")
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -121,15 +164,19 @@ class Child(models.Model):
         verbose_name="Дата рождения",
         help_text="Обязательное поле.",
     )
-    school = models.CharField(
+    school = models.ForeignKey(
+        School,
         verbose_name="Школа",
-        max_length=100,
-        help_text="Обязательное поле.",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
-    classroom = models.CharField(
+    class_number = models.ForeignKey(
+        Class,
         verbose_name="Класс",
-        max_length=100,
-        help_text="Обязательное поле.",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     created_at = models.DateTimeField(
         verbose_name="Дата создания",
@@ -141,7 +188,7 @@ class Child(models.Model):
     )
 
     class Meta:
-        verbose_name = "Деталь"
+        verbose_name = "Ребенок"
         verbose_name_plural = "Дети"
         ordering = ["-created_at"]
 

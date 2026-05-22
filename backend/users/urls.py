@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import ChildViewSet, UserViewSet
+from users.views import ChildViewSet, ClassViewSet, SchoolViewSet, UserViewSet
 
 app_name = "users"
 
@@ -9,6 +9,8 @@ app_name = "users"
 router = DefaultRouter()
 router.register("users", UserViewSet, basename="users")
 router.register("child", ChildViewSet, basename="children")
+router.register("school", SchoolViewSet, basename="schools")
+router.register("class", ClassViewSet, basename="classes")
 
 
 urlpatterns = [

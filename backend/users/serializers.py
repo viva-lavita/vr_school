@@ -4,15 +4,30 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from api.utils import is_russian
-from users.models import Child
+from users.models import Child, Class, School
 
 User = get_user_model()
 
 
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ["pk", "name"]
+
+
+class ClassSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Class
+        fields = ["pk", "name", "school"]
+
+
 class ChildSerializer(serializers.ModelSerializer):
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all())
+    class_number = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all())
+
     class Meta:
         model = Child
-        fields = ["pk", "first_name", "last_name", "patronymic_name", "date_of_birth", "school", "classroom"]
+        fields = ["pk", "first_name", "last_name", "patronymic_name", "date_of_birth", "school", "class_number"]
 
     def validate_first_name(self, value):
         if not is_russian(value):
@@ -125,7 +140,7 @@ class ShortReadUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "first_name", "last_name", "post", "email", "child")
+        fields = ("id", "first_name", "last_name", "email", "child")
 
 
 class UserDeleteSerializer(serializers.Serializer):

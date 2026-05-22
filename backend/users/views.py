@@ -1,12 +1,41 @@
 from django.db import transaction
 from djoser.views import UserViewSet as DjoserUserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, serializers, status
+from rest_framework import filters, permissions, serializers, status
 from rest_framework.response import Response
 
-from api.mixins import RetrieveUpdateViewSet
-from users.models import Child
-from users.serializers import ChildSerializer
+from api.mixins import RetrieveListViewSet, RetrieveUpdateViewSet
+from users.models import Child, Class, School
+from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer
+
+
+class SchoolViewSet(RetrieveListViewSet):
+    """
+    Просмотр списка школ.
+
+    Любой пользователь может получить список школ.
+    """
+
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer
+    permission_classes = (permissions.AllowAny,)
+
+
+class ClassViewSet(RetrieveListViewSet):
+    """
+    Просмотр списка классов.
+
+    Любой пользователь может получить список классов.
+
+    Доступен фильтр по id школы.
+    Использование: ?school=id школы
+    """
+
+    queryset = Class.objects.all()
+    serializer_class = ClassSerializer
+    permission_classes = (permissions.AllowAny,)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ("school__id",)
 
 
 @extend_schema_view(
