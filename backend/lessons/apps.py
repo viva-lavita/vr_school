@@ -7,4 +7,4 @@ class LessonsConfig(AppConfig):
     verbose_name = "Уроки"
 
     def ready(self):
-        pass
+        import lessons.signals  # noqa

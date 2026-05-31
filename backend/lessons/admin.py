@@ -52,7 +52,7 @@ class LessonClassAssignmentAdmin(admin.ModelAdmin):
 
 class TestQuestionAnswerInline(admin.TabularInline):
     model = TestQuestionAnswer
-    extra = 1
+    extra = 0
 
 
 @admin.register(LessonChildAssignment)
