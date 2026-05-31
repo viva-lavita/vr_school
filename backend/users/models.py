@@ -1,5 +1,11 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_user_is_teacher(user):
+    if not user.is_teacher:
+        raise ValidationError("Пользователь должен иметь флаг is_teacher=True")
 
 
 class School(models.Model):
@@ -33,6 +39,7 @@ class Class(models.Model):
         School,
         verbose_name="Школа",
         on_delete=models.CASCADE,
+        related_name="classes",
     )
 
     def __str__(self):
@@ -43,6 +50,21 @@ class Class(models.Model):
         verbose_name_plural = "Классы"
         ordering = ["name"]
         unique_together = ("name", "school")
+
+
+class Subject(models.Model):
+    """Школьный предмет."""
+
+    name = models.CharField(max_length=100, verbose_name="Название предмета")
+    description = models.TextField(blank=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Предмет"
+        verbose_name_plural = "Предметы"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class CustomUserManager(BaseUserManager):
@@ -168,6 +190,7 @@ class Child(models.Model):
         School,
         verbose_name="Школа",
         on_delete=models.SET_NULL,
+        related_name="children",
         blank=True,
         null=True,
     )
@@ -175,6 +198,7 @@ class Child(models.Model):
         Class,
         verbose_name="Класс",
         on_delete=models.SET_NULL,
+        related_name="children",
         blank=True,
         null=True,
     )
@@ -194,3 +218,25 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class Teacher(models.Model):
+    """Преподаватель."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher", verbose_name="Пользователь")
+    subject = models.ForeignKey(Subject, on_delete=models.PROTECT, related_name="teachers", verbose_name="Предмет")
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="teachers", verbose_name="Школа")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Преподаватель"
+        verbose_name_plural = "Преподаватели"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}" or "Преподаватель"
+
+    def clean(self):
+        super().clean()
+        if not self.user.is_teacher:
+            raise ValidationError("Пользователь должен иметь флаг is_teacher=True")
