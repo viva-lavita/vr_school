@@ -70,7 +70,7 @@ class LessonClassAssignment(models.Model):
         constraints = [models.UniqueConstraint(fields=["lesson", "class_name"], name="unique_class_assignment")]
 
     def __str__(self):
-        return f"Класс {self.class_name} к уроку id: {self.lesson.name[:20]}"
+        return f"Класс {self.class_name}, урок: {self.lesson.name[:20]}"
 
 
 class LessonChildAssignment(models.Model):
@@ -80,10 +80,13 @@ class LessonChildAssignment(models.Model):
 
     child = models.ForeignKey(Child, on_delete=models.PROTECT, related_name="assignments", verbose_name="Ученик")
     class_assignment = models.ForeignKey(
-        LessonClassAssignment, on_delete=models.PROTECT, related_name="assignments", verbose_name="Назначение урока"
+        LessonClassAssignment,
+        on_delete=models.PROTECT,
+        related_name="assignments",
+        verbose_name="Назначение урока классу",
     )
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=("Завершен"))
-    score = models.IntegerField(null=True, blank=True, verbose_name=("Оценка"))
+    score = models.SmallIntegerField(null=True, blank=True, verbose_name=("Оценка"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -93,7 +96,7 @@ class LessonChildAssignment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Ответ к уроку {self.class_assignment.lesson.name[:20]}"
+        return f"{self.child}, урок {self.class_assignment.lesson.name[:20]}"
 
 
 class TestQuestionElement(models.Model):
@@ -106,7 +109,7 @@ class TestQuestionElement(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="questions", verbose_name="Тест")
     question = models.TextField(verbose_name="Вопрос")
     answer = models.CharField(max_length=255, verbose_name="Верный ответ")
-    points = models.IntegerField(verbose_name="Балл")
+    points = models.SmallIntegerField(verbose_name="Балл")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -139,4 +142,60 @@ class TestQuestionAnswer(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.question.question[:20]} - {self.answer[:20]}"
+        return f"Ответ ученика {self.assignment.child.first_name} {self.assignment.child.last_name} к вопросу {self.question.question[:20]}"
+
+
+class TestCheckboxElement(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="checkboxes", verbose_name="Тест")
+    question = models.CharField(max_length=255, verbose_name="Вопрос")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: вопрос с чекбоксами"
+        verbose_name_plural = "Элементы теста: вопросы с чекбоксами"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test.name[:20]} - {self.question[:20]}"
+
+
+class TestCheckboxVariant(models.Model):
+    test_element = models.ForeignKey(
+        TestCheckboxElement, related_name="variants", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    answer = models.CharField(max_length=80, verbose_name="Ответ")
+    points = models.SmallIntegerField(verbose_name="Балл")
+    is_correct = models.BooleanField(default=False, verbose_name="Правильно")
+    # TODO: Поля ниже можно удалить
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: варианты для вопроса с чекбоксами"
+        verbose_name_plural = "Элементы теста: варианты для вопросов с чекбоксами"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test_element.question[:20]} - {self.answer[:20]}"
+
+
+class TestCheckboxAnswer(models.Model):
+    question = models.ForeignKey(
+        TestCheckboxElement, related_name="answers", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    assignment = models.ForeignKey(
+        LessonChildAssignment, related_name="answersCheckbox", on_delete=models.CASCADE, verbose_name="Назначение урока"
+    )
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
+    answers = models.ManyToManyField(TestCheckboxVariant, verbose_name="Ответы")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Ответ ученика: вопрос с чекбоксами"
+        verbose_name_plural = "Ответы учеников: вопросы с чекбоксами"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.question.question[:20]} - {self.answers}"
