@@ -1,3 +1,5 @@
+import nested_admin
+from django import forms
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 
@@ -6,6 +8,9 @@ from lessons.models import (
     LessonChildAssignment,
     LessonClassAssignment,
     Test,
+    TestCheckboxAnswer,
+    TestCheckboxElement,
+    TestCheckboxVariant,
     TestQuestionAnswer,
     TestQuestionElement,
 )
@@ -26,12 +31,29 @@ class LessonAdmin(admin.ModelAdmin):
         return obj.name[:20] + "..."
 
 
+class TestQuestionElementInline(nested_admin.NestedTabularInline):
+    model = TestQuestionElement
+    extra = 0
+
+
+class TestCheckboxVariantInline(nested_admin.NestedTabularInline):
+    model = TestCheckboxVariant
+    extra = 0
+
+
+class TestCheckboxElementInline(nested_admin.NestedTabularInline):
+    model = TestCheckboxElement
+    inlines = [TestCheckboxVariantInline]
+    extra = 0
+
+
 @admin.register(Test)
-class TestAdmin(admin.ModelAdmin):
+class TestAdmin(nested_admin.NestedModelAdmin):  # Используем NestedModelAdmin
     list_display = ("id", "short_lesson", "short_name", "created_at", "updated_at")
     search_fields = ("lesson__name", "name", "lesson__teacher__last_name")
     show_facets = admin.ShowFacets.ALWAYS
     date_hierarchy = "created_at"
+    inlines = [TestQuestionElementInline, TestCheckboxElementInline]
 
     @admin.display(description="Название")
     def short_name(self, obj):
@@ -39,7 +61,7 @@ class TestAdmin(admin.ModelAdmin):
 
     @admin.display(description="Урок")
     def short_lesson(self, obj):
-        return obj.lesson.name[:20] + "..."
+        return obj.lesson.name[:20] + "..." if obj.lesson else "-"
 
 
 @admin.register(LessonClassAssignment)
@@ -52,6 +74,11 @@ class LessonClassAssignmentAdmin(admin.ModelAdmin):
 
 class TestQuestionAnswerInline(admin.TabularInline):
     model = TestQuestionAnswer
+    extra = 0
+
+
+class TestCheckboxAnswerInline(admin.TabularInline):
+    model = TestCheckboxAnswer
     extra = 0
 
 
@@ -79,7 +106,7 @@ class LessonChildAssignmentAdmin(admin.ModelAdmin):
         "class_assignment__lesson__teacher__school__name",
     )
     show_facets = admin.ShowFacets.ALWAYS
-    inlines = [TestQuestionAnswerInline]
+    inlines = [TestQuestionAnswerInline, TestCheckboxAnswerInline]
 
     @admin.display(description="Дедлайн")
     def deadline(self, obj):
@@ -107,9 +134,9 @@ class TestQuestionElementAdmin(admin.ModelAdmin):
 
 
 @admin.register(TestQuestionAnswer)
-class TestQuestionAnswerAdmin(admin.ModelAdmin):  # TODO: добавить имя ребенка в поля отображения
+class TestQuestionAnswerAdmin(admin.ModelAdmin):
     list_display = ("id", "child", "question", "answer", "is_correct", "created_at", "updated_at")
-    search_fields = ("question__test__name", "question__question", "assignment__user__last_name")
+    search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
     list_filter = ("is_correct",)
     date_hierarchy = "created_at"
     show_facets = admin.ShowFacets.ALWAYS
@@ -117,3 +144,76 @@ class TestQuestionAnswerAdmin(admin.ModelAdmin):  # TODO: добавить им�
     @admin.display(description="Ребенок")
     def child(self, obj):
         return obj.assignment.child
+
+
+class TestCheckboxVariantInline(admin.TabularInline):
+    model = TestCheckboxVariant
+    extra = 1
+
+
+@admin.register(TestCheckboxElement)
+class TestCheckboxElementAdmin(admin.ModelAdmin):
+    list_display = ("id", "short_test", "short_question", "created_at", "updated_at")
+    search_fields = ("test__name",)
+    date_hierarchy = "created_at"
+    show_facets = admin.ShowFacets.ALWAYS
+    inlines = [TestCheckboxVariantInline]
+
+    @admin.display(description="Тест")
+    def short_test(self, obj):
+        return obj.test.name[:20] + "..."
+
+    @admin.display(description="Вопрос")
+    def short_question(self, obj):
+        return obj.question[:20] + "..."
+
+
+class TestCheckboxAnswerForm(forms.ModelForm):
+    class Meta:
+        model = TestCheckboxAnswer
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and hasattr(self.instance, "question"):
+            # Фильтруем варианты: только для текущего вопроса
+            self.fields["answers"].queryset = TestCheckboxVariant.objects.filter(test_element=self.instance.question)
+
+
+@admin.register(TestCheckboxAnswer)
+class TestCheckboxAnswerAdmin(admin.ModelAdmin):
+    form = TestCheckboxAnswerForm
+    list_display = ("id", "child", "question", "all_answers", "points", "created_at", "updated_at")
+    search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
+    date_hierarchy = "created_at"
+    show_facets = admin.ShowFacets.ALWAYS
+
+    @admin.display(description="Ребенок")
+    def child(self, obj):
+        return obj.assignment.child
+
+    @admin.display(description="Ответы")
+    def all_answers(self, obj):
+        return ", ".join([answer.answer for answer in obj.answers.all()])
+
+    @admin.display(description="Вопрос")
+    def question(self, obj):
+        return obj.question[:20] + "..."
+
+
+# if settings.DEBUG:
+
+#     @admin.register(TestCheckboxVariant)
+#     class TestCheckboxVariantAdmin(admin.ModelAdmin):
+#         list_display = ("id", "question", "short_answer", "is_correct", "points", "created_at", "updated_at")
+#         search_fields = ("answer",)
+#         date_hierarchy = "created_at"
+#         show_facets = admin.ShowFacets.ALWAYS
+
+#         @admin.display(description="Ответ")
+#         def short_answer(self, obj):
+#             return obj.answer[:20]
+
+#         @admin.display(description="Вопрос")
+#         def question(self, obj):
+#             return obj.test_element.question[:20] + "..."
