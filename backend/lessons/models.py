@@ -18,6 +18,7 @@ class Lesson(models.Model):
 
     name = models.CharField(max_length=255, verbose_name="Название урока")
     description = models.TextField(blank=True, verbose_name="Описание")
+    is_need_vpn = models.BooleanField(default=False, verbose_name="Требуется VPN")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="lessons", verbose_name="Преподаватель")
     video = models.URLField(blank=True, verbose_name="Ссылка на видео")
     sub_description = models.TextField(blank=True, verbose_name="Дополнительное описание")
@@ -53,7 +54,7 @@ class Test(models.Model):
 
 class LessonClassAssignment(models.Model):
     """
-    Назначение урока ученику.
+    Назначение урока классу.
     """
 
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="assignments", verbose_name="Урок")
@@ -78,10 +79,10 @@ class LessonChildAssignment(models.Model):
     Назначение урока ученику.
     """
 
-    child = models.ForeignKey(Child, on_delete=models.PROTECT, related_name="assignments", verbose_name="Ученик")
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="assignments", verbose_name="Ученик")
     class_assignment = models.ForeignKey(
         LessonClassAssignment,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="assignments",
         verbose_name="Назначение урока классу",
     )
@@ -121,6 +122,10 @@ class TestQuestionElement(models.Model):
     def __str__(self):
         return f"{self.test.name[:20]} - {self.question[:20]}"
 
+    def save(self, *args, **kwargs):
+        self.answer = self.answer.lower()
+        super().save(*args, **kwargs)
+
 
 class TestQuestionAnswer(models.Model):
     """Ответ на тест."""
@@ -140,6 +145,7 @@ class TestQuestionAnswer(models.Model):
         verbose_name = "Ответ ученика: вопрос с пустым полем ответа"
         verbose_name_plural = "Ответы учеников: вопросы с пустым полем ответа"
         ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_question_answer")]
 
     def __str__(self):
         return f"Ответ ученика {self.assignment.child.first_name} {self.assignment.child.last_name} к вопросу {self.question.question[:20]}"
@@ -167,14 +173,11 @@ class TestCheckboxVariant(models.Model):
     answer = models.CharField(max_length=80, verbose_name="Ответ")
     points = models.SmallIntegerField(verbose_name="Балл")
     is_correct = models.BooleanField(default=False, verbose_name="Правильно")
-    # TODO: Поля ниже можно удалить
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
     class Meta:
         verbose_name = "Элемент теста: варианты для вопроса с чекбоксами"
         verbose_name_plural = "Элементы теста: варианты для вопросов с чекбоксами"
-        ordering = ["-created_at"]
+        ordering = ["-test_element"]
 
     def __str__(self):
         return f"{self.test_element.question[:20]} - {self.answer[:20]}"
