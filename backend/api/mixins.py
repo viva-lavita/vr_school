@@ -26,3 +26,15 @@ class ListCreateRetrieveViewSet(
     """Миксин только для создания, чтения и получения списка экземпляров."""
 
     pass
+
+
+class ListCreateRetrieveUpdateViewSet(ListCreateRetrieveViewSet, mixins.UpdateModelMixin):
+    """Миксин только для создания, чтения, обновления и получения списка экземпляров."""
+
+    pass
+
+
+class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
+    """Миксин только для создания и получения списка экземпляров."""
+
+    pass
