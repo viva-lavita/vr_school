@@ -201,6 +201,7 @@ class TestCheckboxAnswerAdmin(admin.ModelAdmin):
         return obj.question[:20] + "..."
 
 
+# Для отладки, мб пригодится
 # if settings.DEBUG:
 
 #     @admin.register(TestCheckboxVariant)

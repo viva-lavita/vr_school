@@ -103,7 +103,11 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             # на модели unique constraint,  поэтому корректно использовать first
             updated = self.get_queryset().first()
             if updated:
+                question = TestQuestionElement.objects.get(pk=self.kwargs["question_id"])
+                request.data["answer"] = request.data["answer"].strip().lower()
+                is_correct = self.request.data["answer"] == question.answer
                 updated.answer = request.data["answer"]
+                updated.is_correct = is_correct
                 updated.save()
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
