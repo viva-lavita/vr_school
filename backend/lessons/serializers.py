@@ -4,6 +4,7 @@ from lessons.models import (
     Lesson,
     LessonChildAssignment,
     Test,
+    TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
     TestQuestionAnswer,
@@ -43,6 +44,9 @@ class TestCheckboxVariantSerializer(ModelSerializer):
 
 
 class TestCheckboxElementSerializer(ModelSerializer):
+    """Сериализатор только для отображения вопроса."""
+
+    is_many_answers = SerializerMethodField()
     variants = TestCheckboxVariantSerializer(many=True)
 
     class Meta:
@@ -51,7 +55,16 @@ class TestCheckboxElementSerializer(ModelSerializer):
             "pk",
             "question",
             "variants",
+            "is_many_answers",
         )
+
+    def get_is_many_answers(self, obj):
+        self.variants = TestCheckboxVariant.objects.filter(test_element=obj).all()
+        self.is_many_answers = 0
+        for variant in self.variants:
+            if variant.is_correct:
+                self.is_many_answers += 1
+        return self.is_many_answers > 1
 
 
 class TestSerializer(ModelSerializer):
@@ -98,4 +111,13 @@ class TestQuestionAnswerSerializer(ModelSerializer):
         fields = (
             "pk",
             "answer",
+        )
+
+
+class TestCheckboxAnswerSerializer(ModelSerializer):
+    class Meta:
+        model = TestCheckboxAnswer
+        fields = (
+            "pk",
+            "answers",
         )

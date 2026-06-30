@@ -199,6 +199,7 @@ class TestCheckboxAnswer(models.Model):
         verbose_name = "Ответ ученика: вопрос с чекбоксами"
         verbose_name_plural = "Ответы учеников: вопросы с чекбоксами"
         ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_checkbox_answer")]
 
     def __str__(self):
         return f"{self.question.question[:20]} - {self.answers}"

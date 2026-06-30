@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -9,10 +10,19 @@ from lessons.models import (
     LessonChildAssignment,
     LessonClassAssignment,
     Test,
+    TestCheckboxAnswer,
+    TestCheckboxElement,
+    TestCheckboxVariant,
     TestQuestionAnswer,
     TestQuestionElement,
 )
-from lessons.serializers import LessonSerializer, TestDetailSerializer, TestQuestionAnswerSerializer, TestSerializer
+from lessons.serializers import (
+    LessonSerializer,
+    TestCheckboxAnswerSerializer,
+    TestDetailSerializer,
+    TestQuestionAnswerSerializer,
+    TestSerializer,
+)
 from users.models import Child
 
 
@@ -58,7 +68,14 @@ class TestViewSet(RetrieveListViewSet):
 
     @action(detail=True, methods=["get"], serializer_class=TestDetailSerializer)
     def test_detail(self, request, pk=None):
-        """Для запроса при открытии тела теста (слайдов ответов)."""
+        """
+        Для запроса при открытии тела теста (слайдов ответов).
+
+        Здесь отображаются все вопросы теста.
+        Перед отображением юзеру, запросите ответы ученика, по каждому открытому слайду отдельно, чтобы юзер смог изменить свой вариант ответа, если тест еще не проверен.
+        Т.е. когда юзер открывает тест - запрашиваете наличие ответа только на первый вопрос, по мере листания слайдов - запрашиваете ответы на следующие, каждый отдельно.
+        Так сделано из-за сложности получения всех ответов ученика в одном запросе, и того, что каждый слайд снабжен кнопкой сабмита.
+        """
         return self.retrieve(request, pk)
 
 
@@ -84,7 +101,7 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             return Response({"error": "Вы уже ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             child = Child.objects.get(parent=self.request.user)
-            question = TestQuestionElement.objects.get(pk=self.kwargs["question_id"])
+            question = TestQuestionElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
             lesson_pk = question.test.lesson
             assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
             request.data["answer"] = request.data["answer"].strip().lower()
@@ -109,6 +126,71 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
                 updated.answer = request.data["answer"]
                 updated.is_correct = is_correct
                 updated.save()
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return super().list(request, *args, **kwargs)
+
+
+class TestCheckboxAnswerViewSet(CreateListViewSet):
+    """
+    Получение и отправка ответов на вопросы теста.
+
+    Доступ: только авторизированные пользователи, выдача ограничена ответами ученика.
+
+    Механика: ответы по каждому вопросу запрашиваются индивидуально, при открытии слайда с этим вопросом.
+    """
+
+    serializer_class = TestCheckboxAnswerSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        child = Child.objects.get(parent=self.request.user)
+        # Ограничиваем выдачу только ответами ученика по назначенному тесту
+        return TestCheckboxAnswer.objects.filter(question=self.kwargs["question_id"], assignment__child=child)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создание ответа ученика.
+
+        В тесте может быть несколько вариантов ответа.
+        В answer передается список id выбранных пользователем вариантов ответа.
+        """
+        if self.get_queryset().exists():
+            return Response({"error": "Вы уже ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                child = Child.objects.get(parent=self.request.user)
+                question = TestCheckboxElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
+                lesson_pk = question.test.lesson
+                assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
+                variants = TestCheckboxVariant.objects.filter(test_element__id=self.kwargs["question_id"]).all()
+                points = 0
+                for answer in request.data["answers"]:
+                    points += variants.get(id=answer).points
+                new_answer = TestCheckboxAnswer.objects.create(
+                    assignment=assignment, question_id=self.kwargs["question_id"], points=points
+                )
+                for answer in request.data["answers"]:
+                    new_answer.answers.add(answer)
+                return Response(TestCheckboxAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["patch"], serializer_class=TestCheckboxAnswerSerializer)
+    def update_answer(self, request, *args, **kwargs):
+        try:
+            # на модели unique constraint,  поэтому корректно использовать first
+            updated = self.get_queryset().first()
+            if updated:
+                variants = TestCheckboxVariant.objects.filter(test_element__id=self.kwargs["question_id"]).all()
+                points = 0
+                for answer in request.data["answers"]:
+                    points += variants.get(id=answer).points
+                updated.points = points
+                updated.save()
+                updated.answers.clear()
+                for answer in request.data["answers"]:
+                    updated.answers.add(answer)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return super().list(request, *args, **kwargs)

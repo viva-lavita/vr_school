@@ -1,5 +1,6 @@
 import nested_admin
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 
@@ -202,19 +203,19 @@ class TestCheckboxAnswerAdmin(admin.ModelAdmin):
 
 
 # Для отладки, мб пригодится
-# if settings.DEBUG:
+if settings.DEBUG:
 
-#     @admin.register(TestCheckboxVariant)
-#     class TestCheckboxVariantAdmin(admin.ModelAdmin):
-#         list_display = ("id", "question", "short_answer", "is_correct", "points", "created_at", "updated_at")
-#         search_fields = ("answer",)
-#         date_hierarchy = "created_at"
-#         show_facets = admin.ShowFacets.ALWAYS
+    @admin.register(TestCheckboxVariant)
+    class TestCheckboxVariantAdmin(admin.ModelAdmin):
+        list_display = ("id", "question", "short_answer", "is_correct", "points")
+        search_fields = ("answer",)
+        date_hierarchy = "test_element__created_at"
+        show_facets = admin.ShowFacets.ALWAYS
 
-#         @admin.display(description="Ответ")
-#         def short_answer(self, obj):
-#             return obj.answer[:20]
+        @admin.display(description="Ответ")
+        def short_answer(self, obj):
+            return obj.answer[:20]
 
-#         @admin.display(description="Вопрос")
-#         def question(self, obj):
-#             return obj.test_element.question[:20] + "..."
+        @admin.display(description="Вопрос")
+        def question(self, obj):
+            return obj.test_element.question[:20] + "..."
