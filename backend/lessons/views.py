@@ -13,13 +13,17 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestKeyValueAnswer,
+    TestKeyValueElement,
     TestQuestionAnswer,
     TestQuestionElement,
 )
 from lessons.serializers import (
+    AnswersPayloadSerializer,
     LessonSerializer,
     TestCheckboxAnswerSerializer,
     TestDetailSerializer,
+    TestKeyValueAnswerSerializer,
     TestQuestionAnswerSerializer,
     TestSerializer,
 )
@@ -27,8 +31,17 @@ from users.models import Child
 
 
 class LessonViewSet(RetrieveListViewSet):
+    """
+    Просмотр уроков.
+
+    Доступен фильтр по id предмета.
+    Использование: ?search=id предмета.
+    """
+
     serializer_class = LessonSerializer
-    permission_classes = (IsAuthenticated,)  # TODO: добавить верификацию ученика в юзера и пермишн сюда
+    permission_classes = (IsAuthenticated,)  # TODO: добавить верификацию ученика в модель юзера и пермишн сюда
+    filter_backends = [filters.SearchFilter]
+    search_fields = ("teacher__subject__id",)
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными.
@@ -104,10 +117,14 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             question = TestQuestionElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
             lesson_pk = question.test.lesson
             assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
+            # установка флага в процессе прохождения теста
+            if not assignment.in_progress:
+                assignment.in_progress = True
+                assignment.save()
             request.data["answer"] = request.data["answer"].strip().lower()
-            is_correct = self.request.data["answer"] == question.answer
+            points = question.points if request.data["answer"] == question.answer else 0
             new_answer = TestQuestionAnswer.objects.create(
-                assignment=assignment, question_id=self.kwargs["question_id"], is_correct=is_correct, **request.data
+                assignment=assignment, question_id=self.kwargs["question_id"], points=points, **request.data
             )
             return Response(TestQuestionAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -122,9 +139,9 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             if updated:
                 question = TestQuestionElement.objects.get(pk=self.kwargs["question_id"])
                 request.data["answer"] = request.data["answer"].strip().lower()
-                is_correct = self.request.data["answer"] == question.answer
+                points = question.points if request.data["answer"] == question.answer else 0
                 updated.answer = request.data["answer"]
-                updated.is_correct = is_correct
+                updated.points = points
                 updated.save()
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -161,8 +178,13 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
             with transaction.atomic():
                 child = Child.objects.get(parent=self.request.user)
                 question = TestCheckboxElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
+
                 lesson_pk = question.test.lesson
                 assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
+                # установка флага в процессе прохождения теста
+                if not assignment.in_progress:
+                    assignment.in_progress = True
+                    assignment.save()
                 variants = TestCheckboxVariant.objects.filter(test_element__id=self.kwargs["question_id"]).all()
                 points = 0
                 for answer in request.data["answers"]:
@@ -191,6 +213,100 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
                 updated.answers.clear()
                 for answer in request.data["answers"]:
                     updated.answers.add(answer)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return super().list(request, *args, **kwargs)
+
+
+class TestKeyValueAnswerViewSet(CreateListViewSet):
+    """
+    Получение и отправка ответов на вопросы теста.
+
+    Доступ: только авторизированные пользователи, выдача ограничена ответами ученика.
+
+    Механика: ответы по каждому вопросу запрашиваются индивидуально, при открытии слайда с этим вопросом.
+    """
+
+    serializer_class = AnswersPayloadSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        child = Child.objects.get(parent=self.request.user)
+        # Ограничиваем выдачу только ответами ученика по назначенному тесту
+        return TestKeyValueAnswer.objects.filter(question=self.kwargs["question_id"], assignment__child=child)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создание ответа на тип вопроса 'Ключ-значение'.
+
+        В тело запроса нужно передавать подобный json:
+        ```json
+        {
+            "answers": [
+                {
+                "key": 1,
+                "values": [1, 2, 3]
+                },
+                {
+                "key": 2,
+                "values": [4, 5, 6]
+                }
+            ]
+        }
+        где key - id ключа, values - id значений выбранных пользователем к этому ключу.
+        ```
+        """
+        if self.get_queryset().exists():
+            return Response({"error": "Вы уже ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            with transaction.atomic():
+                child = Child.objects.get(parent=self.request.user)
+                question = TestKeyValueElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
+
+                lesson_pk = question.test.lesson
+                assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
+                # установка флага в процессе прохождения теста
+                if not assignment.in_progress:
+                    assignment.in_progress = True
+                    assignment.save()
+                new_answer = TestKeyValueAnswer.objects.create(
+                    assignment=assignment, question_id=self.kwargs["question_id"], answers=request.data["answers"]
+                )
+                return Response(TestKeyValueAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["patch"], serializer_class=TestKeyValueAnswerSerializer)
+    def update_answer(self, request, *args, **kwargs):
+        """
+        Обновление ответа ученика.
+
+        В тело запроса нужно передавать подобный json:
+        ```json
+        {
+            "answers": [
+                {
+                "key": 1,
+                "values": [1, 2, 3]
+                },
+                {
+                "key": 2,
+                "values": [4, 5, 6]
+                }
+            ]
+        }
+        где key - id ключа, values - id значений выбранных пользователем к этому ключу.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            # на модели unique constraint,  поэтому корректно использовать first
+            updated = self.get_queryset().first()
+            if updated:
+                updated.answers = request.data["answers"]
+                updated.save()
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return super().list(request, *args, **kwargs)
