@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
+import { montserrat, inter, exo2 } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata = {
@@ -11,12 +12,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ru">
+    <html
+      lang="ru"
+      className={`${montserrat.variable} ${inter.variable} ${exo2.variable}`}
+    >
       <body>
         <Suspense fallback={<div>Loading...</div>}>
-          <Header />
-          {children}
-          <Footer />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="page-container flex-1">{children}</main>
+            <Footer />
+          </div>
         </Suspense>
       </body>
     </html>
