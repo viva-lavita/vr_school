@@ -1,12 +1,135 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: #ffffff;
+  --color-bg-light: #f6ffde;
+  --color-accent: #deedab;
+  --color-text: #040404;
+  --color-text-muted: #171717;
+
+  /* Палитра из Figma. */
+  --color-white: #fefefe;
+  --color-black: #222222;
+  --color-orange: #ffb62f;
+  --color-green: #22c55e;
+  --color-light-green: #d4f9e1;
+  --color-dark: #343e3d;
+  --color-gray: #d3d3d3;
+  --color-red: #db0000;
+  --color-light-pink: #fdedff;
+
+  /* Шрифты. Ссылаются на CSS-переменные, которые next/font кладёт на <html> */
+  --font-sans: var(--font-montserrat), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
+  --font-display: var(--font-exo2), sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-bg);
+  --foreground: var(--color-text-muted);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  .text-h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 70px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .text-h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .text-h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .text-h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .text-inter {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .text-2 {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .menu-items {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .text-input {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .text-card {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .marginalia {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .page-container {
+    width: 100%;
+    max-width: min(1400px, 100% - 40px);
+    margin-inline: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .page-container {
+      max-width: min(1400px, 100% - 80px);
+    }
+  }
 }
