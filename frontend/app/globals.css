@@ -112,6 +112,15 @@ body {
     letter-spacing: 0;
   }
 
+  .text-button {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 16x;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
   .marginalia {
     font-family: var(--font-body);
     font-weight: 500;
