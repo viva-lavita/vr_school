@@ -15,6 +15,7 @@ from lessons.models import (
     TestCheckboxVariant,
     TestKeyValueAnswer,
     TestKeyValueElement,
+    TestKeyVariant,
     TestQuestionAnswer,
     TestQuestionElement,
 )
@@ -27,6 +28,7 @@ from lessons.serializers import (
     TestQuestionAnswerSerializer,
     TestSerializer,
 )
+from lessons.utils import get_key_value_table
 from users.models import Child
 
 
@@ -254,6 +256,8 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
             ]
         }
         где key - id ключа, values - id значений выбранных пользователем к этому ключу.
+
+        Баллы присваиваются только когда пользователь передал все ключи задания в ответе.
         ```
         """
         if self.get_queryset().exists():
@@ -265,14 +269,40 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
                 child = Child.objects.get(parent=self.request.user)
                 question = TestKeyValueElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
 
+                # считаем баллы
+                true_key_values = get_key_value_table(self.kwargs["question_id"])
+                keys = TestKeyVariant.objects.filter(test_element=self.kwargs["question_id"]).all()
+                keys_ids = set(keys.values_list("id", flat=True))
+                points = 0
+                for key_value in true_key_values:
+                    for answer in request.data["answers"]:
+                        if int(answer["key"]) not in keys_ids:
+                            return Response(
+                                {"error": f"Ключ с id {answer['key']} не принадлежит этому вопросу"},
+                                status=status.HTTP_400_BAD_REQUEST,
+                            )
+                        if int(answer["key"]) == key_value["key"]:
+                            if set(answer["values"]) == set(key_value["values"]):
+                                points += keys.get(id=answer["key"]).points
+                                break  # как только нашли совпадение, то можно выходить из ближайшего цикла
+                            else:
+                                break  # ответ неверный, переходим к следующему ключу вопроса
+                        else:
+                            points = 0
+
+                # установка флага в процессе прохождения теста
                 lesson_pk = question.test.lesson
                 assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
-                # установка флага в процессе прохождения теста
                 if not assignment.in_progress:
                     assignment.in_progress = True
                     assignment.save()
+
+                # создаем ответ
                 new_answer = TestKeyValueAnswer.objects.create(
-                    assignment=assignment, question_id=self.kwargs["question_id"], answers=request.data["answers"]
+                    assignment=assignment,
+                    question_id=self.kwargs["question_id"],
+                    points=points,
+                    answers=request.data["answers"],
                 )
                 return Response(TestKeyValueAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -298,6 +328,8 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
             ]
         }
         где key - id ключа, values - id значений выбранных пользователем к этому ключу.
+
+        Нужно передавать все ключи, а не только измененные.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -305,6 +337,27 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
             # на модели unique constraint,  поэтому корректно использовать first
             updated = self.get_queryset().first()
             if updated:
+                # считаем баллы
+                true_key_values = get_key_value_table(self.kwargs["question_id"])
+                keys = TestKeyVariant.objects.filter(test_element=self.kwargs["question_id"]).all()
+                keys_ids = set(keys.values_list("id", flat=True))
+                points = 0
+                for key_value in true_key_values:
+                    for answer in request.data["answers"]:
+                        if int(answer["key"]) not in keys_ids:
+                            return Response(
+                                {"error": f"Ключ с id {answer['key']} не принадлежит этому вопросу"},
+                                status=status.HTTP_400_BAD_REQUEST,
+                            )
+                        if int(answer["key"]) == key_value["key"]:
+                            if set(answer["values"]) == set(key_value["values"]):
+                                points += keys.get(id=answer["key"]).points
+                                break  # как только нашли совпадение, то можно выходить из ближайшего цикла
+                            else:
+                                break  # ответ неверный, переходим к следующему ключу вопроса
+                        else:
+                            points = 0
+                updated.points = points
                 updated.answers = request.data["answers"]
                 updated.save()
         except Exception as e:
