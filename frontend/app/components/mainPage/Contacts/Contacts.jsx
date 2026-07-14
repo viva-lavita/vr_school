@@ -65,7 +65,7 @@ export default function Contacts() {
                 type="checkbox"
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 size-4 shrink-0 appearance-none rounded-[2px] bg-gray checked:bg-black/60 cursor-pointer"
+                className="mt-0.5 size-4 shrink-0 appearance-none rounded-[2px] bg-gray checked:bg-[url('/icons/ui/check.svg')] checked:bg-no-repeat checked:bg-center cursor-pointer"
               />
               <span className="text-gray text-input">
                 Я подтверждаю ознакомление с Политикой и даю согласие на обработку персональных данных в порядке и на условиях, указанных в Политике.
