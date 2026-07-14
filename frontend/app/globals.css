@@ -35,6 +35,13 @@ body {
   font-family: var(--font-sans);
 }
 
+input[type="date"].date-empty::-webkit-datetime-edit-day-field,
+input[type="date"].date-empty::-webkit-datetime-edit-month-field,
+input[type="date"].date-empty::-webkit-datetime-edit-year-field,
+input[type="date"].date-empty::-webkit-datetime-edit-text {
+  color: transparent;
+}
+
 @layer components {
   .text-h1 {
     font-family: var(--font-display);
