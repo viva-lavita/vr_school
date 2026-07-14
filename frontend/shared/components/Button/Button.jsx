@@ -13,14 +13,14 @@ export default function Button({
   className = "",
   labelClassName = "",
 }) {
-  const classes = `relative flex items-center justify-center bg-orange rounded-[60px] py-4 px-10 h-[51px] cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${className}`;
+  const classes = `flex items-center justify-center gap-2 bg-orange rounded-[60px] py-4 px-10 h-[51px] cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${className}`;
   const style = { width, height };
-  const iconClasses = `absolute top-1/2 -translate-y-1/2 ${iconPosition === "left" ? "left-4" : "right-4"}`;
 
   const content = (
     <>
-      {icon && <span className={iconClasses}>{icon}</span>}
+      {icon && iconPosition === "left" && icon}
       <span className={labelClassName}>{label}</span>
+      {icon && iconPosition === "right" && icon}
     </>
   );
 
