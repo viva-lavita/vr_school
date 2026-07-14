@@ -88,6 +88,14 @@ body {
     letter-spacing: 0;
   }
 
+  .text-eco2 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
   .menu-items {
     font-family: var(--font-body);
     font-weight: 600;
@@ -121,7 +129,7 @@ body {
     text-transform: uppercase;
   }
 
-  .marginalia {
+  .text-marginalia {
     font-family: var(--font-body);
     font-weight: 500;
     font-size: 14px;
@@ -139,6 +147,39 @@ body {
   @media (min-width: 1024px) {
     .page-container {
       max-width: min(1400px, 100% - 80px);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .text-h1 {
+      font-size: 50px;
+    }
+    .text-h2 {
+      font-size: 32px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .text-h1 {
+      font-size: 36px;
+    }
+    .text-h2 {
+      font-size: 24px;
+    }
+    .text-eco2 {
+      font-size: 24px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .text-h1 {
+      font-size: 34px;
+    }
+    .text-h2 {
+      font-size: 22px;
+    }
+    .text-eco2 {
+      font-size: 22px;
     }
   }
 }
