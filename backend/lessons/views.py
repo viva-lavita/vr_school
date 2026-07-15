@@ -13,6 +13,8 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAnswer,
+    TestEssayElement,
     TestKeyValueAnswer,
     TestKeyValueElement,
     TestKeyVariant,
@@ -24,6 +26,7 @@ from lessons.serializers import (
     LessonSerializer,
     TestCheckboxAnswerSerializer,
     TestDetailSerializer,
+    TestEssayAnswerSerializer,
     TestKeyValueAnswerSerializer,
     TestQuestionAnswerSerializer,
     TestSerializer,
@@ -105,6 +108,7 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
 
     serializer_class = TestQuestionAnswerSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = None
 
     def get_queryset(self):
         child = Child.objects.get(parent=self.request.user)
@@ -145,6 +149,8 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
                 updated.answer = request.data["answer"]
                 updated.points = points
                 updated.save()
+            else:
+                return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return super().list(request, *args, **kwargs)
@@ -161,6 +167,7 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
 
     serializer_class = TestCheckboxAnswerSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = None
 
     def get_queryset(self):
         child = Child.objects.get(parent=self.request.user)
@@ -215,6 +222,8 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
                 updated.answers.clear()
                 for answer in request.data["answers"]:
                     updated.answers.add(answer)
+            else:
+                return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return super().list(request, *args, **kwargs)
@@ -222,7 +231,7 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
 
 class TestKeyValueAnswerViewSet(CreateListViewSet):
     """
-    Получение и отправка ответов на вопросы теста.
+    Получение и отправка ответов на вопросы теста формата 'Ключ-значение'.
 
     Доступ: только авторизированные пользователи, выдача ограничена ответами ученика.
 
@@ -231,6 +240,7 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
 
     serializer_class = AnswersPayloadSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = None
 
     def get_queryset(self):
         child = Child.objects.get(parent=self.request.user)
@@ -360,6 +370,69 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
                 updated.points = points
                 updated.answers = request.data["answers"]
                 updated.save()
+            else:
+                return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return super().list(request, *args, **kwargs)
+
+
+class TestEssayAnswerViewSet(CreateListViewSet):
+    """
+    Отправка ответа ученика на элемент теста с типом эссе.
+
+    Редактирование возможно, пока тест не проверен учителем.
+    Доступ: только авторизированные пользователи, выдача ограничена ответами ученика.
+    Механика: ответы по каждому вопросу запрашиваются индивидуально, при открытии слайда с этим вопросом.
+    """
+
+    queryset = TestEssayAnswer.objects.all()
+    serializer_class = TestEssayAnswerSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        child = Child.objects.get(parent=self.request.user)
+        # Ограничиваем выдачу только ответами ученика по назначенному тесту
+        return TestEssayAnswer.objects.filter(question=self.kwargs["question_id"], assignment__child=child)
+
+    def create(self, request, *args, **kwargs):
+        if self.get_queryset().exists():
+            return Response({"error": "Вы уже ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            child = Child.objects.get(parent=self.request.user)
+            question = TestEssayElement.objects.select_related("test").get(pk=self.kwargs["question_id"])
+            lesson_pk = question.test.lesson
+            assignment = LessonChildAssignment.objects.get(child=child, class_assignment__lesson=lesson_pk)
+            # установка флага в процессе прохождения теста
+            if not assignment.in_progress:
+                assignment.in_progress = True
+                assignment.save()
+            new_answer = TestEssayAnswer.objects.create(
+                assignment=assignment, question_id=self.kwargs["question_id"], **request.data
+            )
+            return Response(TestEssayAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["patch"], serializer_class=TestEssayAnswerSerializer)
+    def update_answer(self, request, *args, **kwargs):
+        """
+        Обновление ответа ученика.
+
+        Если эссе уже проверено учителем, то изменение невозможно.
+        """
+        try:
+            # на модели unique constraint,  поэтому корректно использовать first
+            updated = self.get_queryset().first()
+            if updated:
+                if updated.is_verified:
+                    return Response(
+                        {"error": "Ответ уже проверен, изменение невозможно"}, status=status.HTTP_400_BAD_REQUEST
+                    )
+                updated.answer = request.data["answer"]
+                updated.save()
+            else:
+                return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return super().list(request, *args, **kwargs)

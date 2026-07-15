@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from lessons.views import (
     LessonViewSet,
     TestCheckboxAnswerViewSet,
+    TestEssayAnswerViewSet,
     TestKeyValueAnswerViewSet,
     TestQuestionAnswerViewSet,
     TestViewSet,
@@ -17,6 +18,7 @@ router = DefaultRouter()
 router.register("lessons", LessonViewSet, basename="lessons")
 router.register("tests", TestViewSet, basename="tests")
 router.register(r"test-answers/question/(?P<question_id>\d+)", TestQuestionAnswerViewSet, basename="test-answers")
+router.register(r"test-answers/essay/(?P<question_id>\d+)", TestEssayAnswerViewSet, basename="test-essay-answers")
 router.register(
     r"test-answers/checkbox/(?P<question_id>\d+)", TestCheckboxAnswerViewSet, basename="test-checkbox-answers"
 )

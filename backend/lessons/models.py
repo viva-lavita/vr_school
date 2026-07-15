@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from users.models import Child, Class, Teacher
@@ -103,7 +104,7 @@ class TestQuestionElement(models.Model):
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="questions", verbose_name="Тест")
     question = models.TextField(verbose_name="Вопрос")
-    answer = models.CharField(max_length=255, verbose_name="Верный ответ")
+    answer = models.CharField(max_length=20, verbose_name="Верный ответ")
     points = models.SmallIntegerField(default=1, verbose_name="Балл")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -130,7 +131,7 @@ class TestQuestionAnswer(models.Model):
     assignment = models.ForeignKey(
         LessonChildAssignment, related_name="answersQuestion", on_delete=models.CASCADE, verbose_name="Назначение урока"
     )
-    answer = models.CharField(max_length=255, verbose_name="Ответ")
+    answer = models.CharField(max_length=20, verbose_name="Ответ")
     points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -267,3 +268,59 @@ class TestKeyValueAnswer(models.Model):
 
     def __str__(self):
         return f"{self.question.description[:20]} - {self.answers}"
+
+
+class TestEssayElement(models.Model):
+    """Элемент теста: эссе. Проверка преподавателем."""
+
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays", verbose_name="Тест")
+    question = models.CharField(max_length=1000, verbose_name="Вопрос")
+    points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: эссе"
+        verbose_name_plural = "Элементы теста: эссе"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test.name[:20]} - {self.question[:20]}"
+
+
+class TestEssayAnswer(models.Model):
+    """Ответ ученика на эссе."""
+
+    question = models.ForeignKey(
+        TestEssayElement, related_name="answers", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    assignment = models.ForeignKey(
+        LessonChildAssignment, related_name="answersEssay", on_delete=models.CASCADE, verbose_name="Назначение урока"
+    )
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
+    answer = models.TextField(verbose_name="Ответ")
+    is_verified = models.BooleanField(default=False, verbose_name="Проверен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Ответ ученика: эссе"
+        verbose_name_plural = "Ответы учеников: эссе"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_essay_answer")]
+
+    def __str__(self):
+        return f"{self.question.question[:20]} - {self.answer[:20]}"
+
+    def clean(self):
+        super().clean()
+        if self.points is not None and self.question_id is not None:
+            max_points = self.question.points
+            if self.points > max_points:
+                raise ValidationError(
+                    {"points": f"Баллы не могут превышать максимальное количество баллов в вопросе ({max_points})."}
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

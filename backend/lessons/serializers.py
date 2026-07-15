@@ -7,6 +7,8 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAnswer,
+    TestEssayElement,
     TestKeyValueAnswer,
     TestKeyValueElement,
     TestKeyVariant,
@@ -77,6 +79,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
     q_tests = serializers.SerializerMethodField()
     checkbox_tests = serializers.SerializerMethodField()
     key_value_tests = serializers.SerializerMethodField()
+    essay_test = serializers.SerializerMethodField()
 
     class Meta:
         model = Test
@@ -85,6 +88,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
             "q_tests",
             "checkbox_tests",
             "key_value_tests",
+            "essay_test",
         )
 
     def get_q_tests(self, obj: Test):
@@ -96,6 +100,9 @@ class TestDetailSerializer(serializers.ModelSerializer):
     def get_key_value_tests(self, obj: Test):
         elements = TestKeyValueElement.objects.filter(test=obj).prefetch_related("keys", "keys__values")
         return TestKeyValueElementSerializer(elements, many=True).data
+
+    def get_essay_test(self, obj: Test):
+        return TestEssayElementSerializer(TestEssayElement.objects.filter(test=obj), many=True).data
 
 
 class TestQuestionElementSerializer(serializers.ModelSerializer):
@@ -246,4 +253,25 @@ class TestKeyValueAnswerSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "answers",
+        )
+
+
+class TestEssayElementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestEssayElement
+        fields = (
+            "pk",
+            "question",
+        )
+
+
+class TestEssayAnswerSerializer(serializers.ModelSerializer):
+    is_verified = serializers.ReadOnlyField()
+
+    class Meta:
+        model = TestEssayAnswer
+        fields = (
+            "pk",
+            "answer",
+            "is_verified",
         )
