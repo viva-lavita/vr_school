@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import Button from "@/shared/components/Button/Button";
 import Input from "@/shared/components/Input/Input";
@@ -36,7 +38,7 @@ const NAME_ERROR = "Допустимые буквенные символы А-Я
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_ERROR = "Неверный email";
 
-const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&*!])[A-Za-z\d@#$%&*!]{8,}$/;
+const PASSWORD_PATTERN = /^[A-Za-z\d@#$%&*!]{8,}$/;
 const PASSWORD_ERROR =
   "Пароль должен содержать не менее 8 символов, используйте латиницу, спецсимволы (@#$%&*!), заглавные и прописные буквы, цифры";
 
@@ -120,6 +122,7 @@ const initialFormData = {
 };
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [consentRule, setConsentRule] = useState(false);
   const [consentPD, setConsentPD] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
@@ -440,12 +443,18 @@ export default function RegisterPage() {
             disabled={loading}
           />
 
-          <p className="text-input text-black text-center pb-12 pt-5">Уже есть аккунт? <span className="underline">Войти в личный кабинет</span></p>
+          <p className="text-input text-black text-center pb-12 pt-5">Уже есть аккунт? <Link href="/login" className="underline">Войти в личный кабинет</Link></p>
         </form>
       </div>
       </div>
 
-      <Popup open={success} onClose={() => setSuccess(false)}>
+      <Popup
+        open={success}
+        onClose={() => {
+          setSuccess(false);
+          router.push("/login");
+        }}
+      >
         <p className="text-h4 text-black text-center">Регистрация прошла успешно</p>
       </Popup>
     </>
