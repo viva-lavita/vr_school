@@ -42,6 +42,17 @@ input[type="date"].date-empty::-webkit-datetime-edit-text {
   color: transparent;
 }
 
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 @layer components {
   .text-h1 {
     font-family: var(--font-display);
