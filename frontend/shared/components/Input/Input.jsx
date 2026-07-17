@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 
 export default function Input({
+  name,
   placeholder,
   required = false,
   type = "text",
@@ -13,6 +14,8 @@ export default function Input({
   value,
   defaultValue,
   onChange,
+  error = false,
+  errorMessage,
   ...props
 }) {
   const inputRef = useRef(null);
@@ -36,63 +39,69 @@ export default function Input({
       inputRef.current.focus();
     }
     setHasValue(false);
+    onChange?.({ target: { name, value: "" } });
   };
 
-  const fieldClassName = `w-full text-input text-black  bg-white rounded-xl px-4 py-3 ${hasRightIcon ? "pr-11" : ""} ${className}`;
+  const fieldClassName = `w-full text-input text-black  bg-white rounded-xl px-4 py-3 ${hasRightIcon ? "pr-11" : ""} ${error ? "border-2 border-red" : ""} ${className}`;
 
   return (
-    <div className="relative">
-      <input
-        ref={inputRef}
-        type={inputType}
-        placeholder=" "
-        required={required}
-        value={value}
-        defaultValue={defaultValue}
-        onChange={handleChange}
-        className={`${fieldClassName} ${isDate && !hasValue ? "date-empty" : ""}`}
-        {...props}
-      />
+    <div className="flex h-full flex-col justify-end">
+      {error && errorMessage && <p className="mb-1 text-input text-red">{errorMessage}</p>}
 
-      <span
-        className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input text-black  ${hasValue ? "hidden" : "block"}`}
-      >
-        {placeholder}
-        {required && <span className="text-red">*</span>}
-      </span>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          name={name}
+          type={inputType}
+          placeholder=" "
+          required={required}
+          value={value}
+          defaultValue={defaultValue}
+          onChange={handleChange}
+          className={`${fieldClassName} ${isDate && !hasValue ? "date-empty" : ""}`}
+          {...props}
+        />
 
-      {isPassword && (
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={() => setInputType((t) => (t === "password" ? "text" : "password"))}
-          className="absolute right-4 top-1/2 -translate-y-1/2"
+        <span
+          className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input text-black  ${hasValue ? "hidden" : "block"}`}
         >
-          <Image
-            src={inputType === "password" ? "/icons/ui/hide.svg" : "/icons/ui/show.svg"}
-            alt=""
-            width={16}
-            height={16}
-          />
-        </button>
-      )}
-
-      {showClear && (
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={handleClear}
-          className="absolute right-4 top-1/2 -translate-y-1/2"
-        >
-          <Image src="/icons/ui/close.svg" alt="" width={16} height={16} />
-        </button>
-      )}
-
-      {showEditIcon && (
-        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-          <Image src="/icons/ui/pen.svg" alt="" width={16} height={16} />
+          {placeholder}
+          {required && <span className="text-red">*</span>}
         </span>
-      )}
+
+        {isPassword && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setInputType((t) => (t === "password" ? "text" : "password"))}
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+          >
+            <Image
+              src={inputType === "password" ? "/icons/ui/hide.svg" : "/icons/ui/show.svg"}
+              alt=""
+              width={16}
+              height={16}
+            />
+          </button>
+        )}
+
+        {showClear && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={handleClear}
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+          >
+            <Image src="/icons/ui/close.svg" alt="" width={16} height={16} />
+          </button>
+        )}
+
+        {showEditIcon && (
+          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+            <Image src="/icons/ui/pen.svg" alt="" width={16} height={16} />
+          </span>
+        )}
+      </div>
     </div>
   );
 }
