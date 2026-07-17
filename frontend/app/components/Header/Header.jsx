@@ -7,7 +7,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
+    <header className="relative z-20 page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
       <img
         src="/icons/logo/logo.svg"
         alt="logo"
