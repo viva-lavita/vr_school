@@ -42,6 +42,15 @@ input[type="date"].date-empty::-webkit-datetime-edit-text {
   color: transparent;
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+input[type="date"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .hide-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
