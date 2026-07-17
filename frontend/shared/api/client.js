@@ -1,3 +1,5 @@
+import { getAccessToken } from "@/shared/api/tokens";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1/";
 
 export class ApiError extends Error {
@@ -9,10 +11,13 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch(path, { method = "GET", body, headers, ...rest } = {}) {
+  const accessToken = getAccessToken();
+
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
