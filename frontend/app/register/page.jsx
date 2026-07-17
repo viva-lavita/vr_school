@@ -42,6 +42,9 @@ const PASSWORD_PATTERN = /^[A-Za-z\d@#$%&*!]{8,}$/;
 const PASSWORD_ERROR =
   "Пароль должен содержать не менее 8 символов, используйте латиницу, спецсимволы (@#$%&*!), заглавные и прописные буквы, цифры";
 
+const MIN_BIRTH_DATE = "1900-01-01";
+const MAX_BIRTH_DATE = new Date().toISOString().split("T")[0];
+
 function validateForm(formData) {
   const fieldErrors = {};
 
@@ -284,6 +287,8 @@ export default function RegisterPage() {
                 placeholder="Дата рождения"
                 required
                 clearable
+                min={MIN_BIRTH_DATE}
+                max={MAX_BIRTH_DATE}
                 value={formData.date_of_birth}
                 onChange={handleChange}
                 error={Boolean(fieldErrors.date_of_birth)}
@@ -381,6 +386,8 @@ export default function RegisterPage() {
                 placeholder="Дата рождения"
                 required
                 clearable
+                min={MIN_BIRTH_DATE}
+                max={MAX_BIRTH_DATE}
                 value={formData.child.date_of_birth}
                 onChange={handleChildChange}
                 error={Boolean(fieldErrors.child_date_of_birth)}
