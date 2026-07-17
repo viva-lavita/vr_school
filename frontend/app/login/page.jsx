@@ -8,6 +8,7 @@ import Button from "@/shared/components/Button/Button";
 import Input from "@/shared/components/Input/Input";
 import { ApiError } from "@/shared/api/client";
 import { loginUser } from "@/shared/api/auth";
+import { useUser } from "@/shared/context/UserContext";
 
 const REQUIRED_MESSAGE = "Поле должно быть заполненным";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,6 +38,7 @@ const initialFormData = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refetch } = useUser();
   const [formData, setFormData] = useState(initialFormData);
   const [fieldErrors, setFieldErrors] = useState({});
   const [errors, setErrors] = useState([]);
@@ -67,7 +69,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await loginUser(formData);
-      router.push("/profile");
+      await refetch();
+      router.push("/profile/information");
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setErrors([INVALID_CREDENTIALS_MESSAGE]);
