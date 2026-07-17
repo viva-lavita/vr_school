@@ -3,7 +3,7 @@ import Button from "@/shared/components/Button/Button";
 
 export default function Main() {
   return (
-    <div className="relative -z-10 -mt-[86px] pt-[86px] mx-[calc(50%-50vw)] bg-black">
+    <div className="-mt-[86px] pt-[86px] mx-[calc(50%-50vw)] bg-black">
       <div className="text-center items-center md:items-start md:text-left page-container flex justify-between pt-8 pb-20 lg:pb-[82px] lg:pt-15 md:pb-[73px] md:pt-15 min-[1920px]:pt-30! min-[1920px]:pb-39! flex-col-reverse md:flex-row">
         <div className="flex flex-col justify-center items-center md:items-start md:self-center">
           <div className="text-marginalia text-gray pb-2">Старшие классы</div>
@@ -11,6 +11,7 @@ export default function Main() {
           <div className="text-h2 text-white min-[1920px]:pb-20 md:pb-12 pb-7">Знания через видео, практику и&nbsp;виртуальные эксперименты</div>
           <Button
             label="Начать обучение"
+            href="/login"
             width="278px"
             height="66px"
             labelClassName="text-button"

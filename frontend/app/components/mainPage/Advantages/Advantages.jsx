@@ -39,6 +39,7 @@ export default function Advantages() {
         <div className="pt-7 mb:pt-10 lg:pt-12 min-[1920px]:pt-15 flex justify-center">
           <Button
             label="Начать обучение"
+            href="/login"
             width="278px"
             labelClassName="text-button"
             icon={<Image src="/icons/vr/vr-glass.svg" alt="" width={24} height={24} />}

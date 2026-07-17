@@ -20,6 +20,7 @@ export default function Registration() {
 
           <Button
             label="Зарегестрироваться"
+            href="/register"
             width="314px"
             labelClassName="text-button"
             icon={<Image src="/icons/vr/vr-glass.svg" alt="" width={24} height={24} />}
