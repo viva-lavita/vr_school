@@ -31,9 +31,9 @@ export default function Header() {
 
       <nav className="hidden md:flex items-center ml-[clamp(138px,calc(138px+(238px-138px)*(100vw-768px)/(1920px-768px)),238px)]">
         <ul className="flex gap-7 h-5">
-          <li><Link href="/teams">Команда</Link></li>
-          <li><Link href="/about">О проекте</Link></li>
-          <li><Link href="/contacts">Контакты</Link></li>
+          <li><Link href="/#team">Команда</Link></li>
+          <li><Link href="/#about">О проекте</Link></li>
+          <li><Link href="/#contacts">Контакты</Link></li>
         </ul>
       </nav>
 
@@ -78,9 +78,9 @@ export default function Header() {
               <img src="/icons/ui/close.svg" alt="" className="size-[24px]" />
             </button>
             <ul className="menu-items text-white flex flex-col gap-7">
-              <li><Link href="/teams" onClick={() => setMenuOpen(false)}>Команда</Link></li>
-              <li><Link href="/about" onClick={() => setMenuOpen(false)}>О проекте</Link></li>
-              <li><Link href="/contacts" onClick={() => setMenuOpen(false)}>Контакты</Link></li>
+              <li><Link href="/#team" onClick={() => setMenuOpen(false)}>Команда</Link></li>
+              <li><Link href="/#about" onClick={() => setMenuOpen(false)}>О проекте</Link></li>
+              <li><Link href="/#contacts" onClick={() => setMenuOpen(false)}>Контакты</Link></li>
             </ul>
           </nav>
         </div>
