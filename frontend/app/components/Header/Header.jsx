@@ -22,12 +22,18 @@ export default function Header() {
   };
 
   return (
-    <header className="relative z-20 page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
-      <img
-        src="/icons/logo/logo.svg"
-        alt="logo"
-        className="size-[66px] justify-self-start"
-      />
+    <header className="sticky top-0 z-30 page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="justify-self-start cursor-pointer"
+      >
+        <img
+          src="/icons/logo/logo.svg"
+          alt="logo"
+          className="size-[66px]"
+        />
+      </button>
 
       <nav className="hidden md:flex items-center ml-[clamp(138px,calc(138px+(238px-138px)*(100vw-768px)/(1920px-768px)),238px)]">
         <ul className="flex gap-7 h-5">
