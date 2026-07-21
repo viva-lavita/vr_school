@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { logoutUser } from "@/shared/api/auth";
 import { useUser } from "@/shared/context/UserContext";
@@ -10,6 +10,7 @@ import Button from "@/shared/components/Button/Button";
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, setUser } = useUser();
@@ -20,6 +21,10 @@ export default function Header() {
     setUserMenuOpen(false);
     router.push("/");
   };
+
+  const closeUserMenu = () => setUserMenuOpen(false);
+
+  const isProfilePage = pathname.startsWith("/profile") || pathname.startsWith("/lessons");
 
   return (
     <header className="sticky top-0 z-30 page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
@@ -96,26 +101,52 @@ export default function Header() {
         <div className="fixed inset-0 z-50">
           <div
             className="absolute inset-0 bg-black/80"
-            onClick={() => setUserMenuOpen(false)}
+            onClick={closeUserMenu}
           />
           <nav className="absolute top-0 right-0 md:w-[480px] w-[320px] h-full bg-white p-[28px]">
             <button
               type="button"
-              onClick={() => setUserMenuOpen(false)}
+              onClick={closeUserMenu}
               aria-label="Закрыть меню"
               className="absolute top-0 right-0 p-[12px]"
             >
               <img src="/icons/ui/x.svg" alt="" className="size-[24px]" />
             </button>
+
             <p className="text-h4 text-black pb-7">Профиль</p>
             <p className="text-inter text-black">{user.first_name} {user.last_name}</p>
-            <div className="h-[1px] w-full bg-gray mt-5 mb-10"></div>
+            <div className="h-[1px] w-full bg-gray mt-5 mb-10" />
 
             <ul className="menu-items text-black flex flex-col gap-2 mb-15">
-              <li><Link href="/profile/information" onClick={() => setUserMenuOpen(false)}>Мои данные</Link></li>
-              <li><Link href="/lessons" onClick={() => setUserMenuOpen(false)}>Каталог уроков</Link></li>
-              <li><Link href="/profile/password" onClick={() => setUserMenuOpen(false)}>Изменение пароля</Link></li>
+              <li>
+                <Link
+                  href="/profile/information"
+                  onClick={closeUserMenu}
+                  className={isProfilePage && pathname === "/profile/information" ? "text-orange" : ""}
+                >
+                  Мои данные
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/lessons"
+                  onClick={closeUserMenu}
+                  className={pathname === "/lessons" ? "text-orange" : ""}
+                >
+                  Каталог уроков
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/profile/password"
+                  onClick={closeUserMenu}
+                  className={pathname === "/profile/password" ? "text-orange" : ""}
+                >
+                  Сменить пароль
+                </Link>
+              </li>
             </ul>
+
             <div>
               <Button
                 label="Выйти из профиля"
