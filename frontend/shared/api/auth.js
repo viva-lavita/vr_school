@@ -14,3 +14,7 @@ export async function loginUser({ email, password }) {
 export function logoutUser() {
   clearTokens();
 }
+
+export function requestPasswordReset({ email }) {
+  return apiFetch("users/reset_password/", { method: "POST", body: { email } });
+}

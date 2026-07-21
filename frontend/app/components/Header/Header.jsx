@@ -131,16 +131,16 @@ export default function Header() {
                 <Link
                   href="/lessons"
                   onClick={closeUserMenu}
-                  className={pathname === "/lessons" ? "text-orange" : ""}
+                  className={pathname === "/lessons" || pathname.startsWith("/lessons/") ? "text-orange" : ""}
                 >
                   Каталог уроков
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/profile/password"
+                  href="/profile/change-password"
                   onClick={closeUserMenu}
-                  className={pathname === "/profile/password" ? "text-orange" : ""}
+                  className={pathname === "/profile/change-password" ? "text-orange" : ""}
                 >
                   Сменить пароль
                 </Link>
