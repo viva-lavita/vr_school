@@ -8,6 +8,7 @@ import Loader from "@/shared/components/Loader/Loader";
 import { logoutUser } from "@/shared/api/auth";
 import { useUser } from "@/shared/context/UserContext";
 import { getLesson } from "@/shared/api/lessons";
+import TestTab from "./components/TestTab";
 
 export default function LessonPage() {
   const { id } = useParams();
@@ -213,9 +214,7 @@ export default function LessonPage() {
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 mb-20">
-          <p className="text-2 text-dark">Проверочная работа будет доступна позже</p>
-        </div>
+        <TestTab lesson={lesson} onBackToMaterials={() => setActiveTab("materials")} />
       )}
     </div>
   );
