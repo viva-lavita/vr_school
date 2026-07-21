@@ -114,7 +114,7 @@ export default function Header() {
             <ul className="menu-items text-black flex flex-col gap-2 mb-15">
               <li><Link href="/profile/information" onClick={() => setUserMenuOpen(false)}>Мои данные</Link></li>
               <li><Link href="/lessons" onClick={() => setUserMenuOpen(false)}>Каталог уроков</Link></li>
-              <li><Link href="/profile/password" onClick={() => setUserMenuOpen(false)}>Изменение пароля</Link></li>
+              <li><Link href="/profile/change-password" onClick={() => setUserMenuOpen(false)}>Изменение пароля</Link></li>
             </ul>
             <div>
               <Button
