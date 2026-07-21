@@ -15,7 +15,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="ru"
-      className={`${montserrat.variable} ${inter.variable} ${exo2.variable}`}
+      className={`${montserrat.variable} ${inter.variable} ${exo2.variable} scroll-smooth`}
     >
       <body>
         <Suspense fallback={<div>Loading...</div>}>
