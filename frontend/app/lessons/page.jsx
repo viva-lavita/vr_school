@@ -103,7 +103,7 @@ export default function LessonsPage() {
 
       {/* Green container with cards */}
       <div
-        className="mt-[28px] rounded-[32px] px-5 py-5 md:px-[40px] md:py-[40px] lg:px-[60px] lg:py-[60px] mb-[120px]"
+        className="mt-[28px] rounded-[32px] px-5 py-5 md:px-[40px] md:py-[40px] lg:px-[60px] lg:py-[60px]"
         style={{ background: "#D4F9E1" }}
       >
         {loadingLessons ? (

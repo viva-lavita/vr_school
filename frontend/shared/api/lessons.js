@@ -31,3 +31,11 @@ export async function getLessons({ subject, page = 1 } = {}) {
     return { results, count: total, total_pages: totalPages };
   }
 }
+
+export async function getLesson(id) {
+  try {
+    return await apiFetch(`lessons/${id}/`);
+  } catch {
+    return lessons.find((l) => l.id === Number(id)) ?? null;
+  }
+}
