@@ -30,7 +30,7 @@ export default function Header() {
     <header className="sticky top-0 z-30 page-container menu-items text-white text-base grid grid-cols-3 md:flex items-center mt-[20px] bg-dark rounded-lg px-[20px] lg:px-7">
       <button
         type="button"
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onClick={() => pathname === "/" ? window.scrollTo({ top: 0, behavior: "smooth" }) : router.push("/")}
         className="justify-self-start cursor-pointer"
       >
         <img
