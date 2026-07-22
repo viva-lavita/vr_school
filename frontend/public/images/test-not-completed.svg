@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 833 320" fill="none">
+  <!-- Background -->
+  <rect width="833" height="320" rx="32" fill="#D4F9E1"/>
+  
+  <!-- Notebook body -->
+  <rect x="260" y="40" width="310" height="240" rx="12" fill="#22C55E"/>
+  <rect x="268" y="48" width="294" height="224" rx="8" fill="white"/>
+  
+  <!-- Spiral binding -->
+  <line x1="418" y1="48" x2="418" y2="272" stroke="#222222" stroke-width="2"/>
+  <circle cx="418" cy="68" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="98" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="128" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="158" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="188" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="218" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  <circle cx="418" cy="248" r="4" fill="white" stroke="#222222" stroke-width="1.5"/>
+  
+  <!-- Left page lines -->
+  <rect x="290" y="80" width="100" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="290" y="100" width="80" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="290" y="120" width="90" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="290" y="140" width="70" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="290" y="160" width="85" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="290" y="180" width="95" height="8" rx="2" fill="#D4F9E1"/>
+  
+  <!-- Right page - checkboxes -->
+  <!-- Checkbox 1 - checked -->
+  <rect x="440" y="80" width="18" height="18" rx="3" fill="white" stroke="#22C55E" stroke-width="2"/>
+  <path d="M444 89L448 93L454 85" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="468" y="82" width="100" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="468" y="94" width="80" height="8" rx="2" fill="#D4F9E1"/>
+  
+  <!-- Checkbox 2 - X mark -->
+  <rect x="440" y="115" width="18" height="18" rx="3" fill="white" stroke="#FFB62F" stroke-width="2"/>
+  <path d="M444 119L454 129M454 119L444 129" stroke="#FFB62F" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="468" y="117" width="90" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="468" y="129" width="75" height="8" rx="2" fill="#D4F9E1"/>
+  
+  <!-- Checkbox 3 - empty -->
+  <rect x="440" y="150" width="18" height="18" rx="3" fill="white" stroke="#22C55E" stroke-width="2"/>
+  <rect x="468" y="152" width="95" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="468" y="164" width="70" height="8" rx="2" fill="#D4F9E1"/>
+  
+  <!-- Checkbox 4 - empty -->
+  <rect x="440" y="185" width="18" height="18" rx="3" fill="white" stroke="#22C55E" stroke-width="2"/>
+  <rect x="468" y="187" width="85" height="8" rx="2" fill="#D4F9E1"/>
+  <rect x="468" y="199" width="100" height="8" rx="2" fill="#D4F9E1"/>
+  
+  <!-- Phone/tablet on left -->
+  <rect x="200" y="50" width="100" height="180" rx="12" fill="white" stroke="#222222" stroke-width="2"/>
+  <rect x="208" y="62" width="84" height="150" rx="4" fill="#D4F9E1"/>
+  <circle cx="250" cy="220" r="6" fill="#22C55E"/>
+  
+  <!-- Green pencil on right -->
+  <rect x="580" y="120" width="12" height="100" rx="3" fill="#22C55E" transform="rotate(30 580 120)"/>
+  <polygon points="580,220 575,235 585,235" fill="#FFB62F" transform="rotate(30 580 220)"/>
+  <rect x="578" y="115" width="16" height="15" rx="2" fill="#FFB62F" transform="rotate(30 578 115)"/>
+  
+  <!-- Yellow clip -->
+  <rect x="590" y="80" width="20" height="30" rx="4" fill="#FFB62F"/>
+  <rect x="594" y="85" width="12" height="8" rx="2" fill="white"/>
+  
+  <!-- Small green triangle -->
+  <polygon points="220,100 230,85 240,100" fill="#22C55E"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="350" cy="30" r="6" fill="none" stroke="#22C55E" stroke-width="2"/>
+  <circle cx="500" cy="290" r="6" fill="none" stroke="#22C55E" stroke-width="2"/>
+</svg>

@@ -214,7 +214,7 @@ export default function LessonPage() {
           </button>
         </div>
       ) : (
-        <TestTab lesson={lesson} onBackToMaterials={() => setActiveTab("materials")} />
+        <TestTab lesson={lesson} user={user} onBackToMaterials={() => setActiveTab("materials")} />
       )}
     </div>
   );

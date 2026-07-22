@@ -2,7 +2,7 @@
 
 import TestCard from "./TestCard";
 
-export default function TestTab({ lesson, onBackToMaterials }) {
+export default function TestTab({ lesson, user, onBackToMaterials }) {
   const comment = lesson.test_comment;
   const tests = lesson.tests || [];
 
@@ -43,7 +43,7 @@ export default function TestTab({ lesson, onBackToMaterials }) {
       {/* Test cards */}
       {tests.length > 0 ? (
         tests.map((test) => (
-          <TestCard key={test.id} test={test} onBackToMaterials={onBackToMaterials} />
+          <TestCard key={test.id} test={test} user={user} onBackToMaterials={onBackToMaterials} />
         ))
       ) : (
         <p className="text-2 text-dark">Проверочная работа пока не добавлена</p>
