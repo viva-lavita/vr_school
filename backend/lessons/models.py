@@ -1,16 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
 
 from users.models import Child, Class, Teacher
 
 User = get_user_model()
-
-# TODO: блок домашнее задание - Яндекс формы или AI генерация и т.д. отрисовка на фронте.
-# TODO: Комментарии к уроку - переписка между учителем и учеником (вывод комментариев только по этому ученику).
-# Вопрос: в формате чата или подойдет в формате комментарий от ученика - ответ от преподавателя.
-# Если простые комментарии, то будет обычная фильтрация по ученику (ответы учителя будут привязаны к комментарию от ученика). Две таблицы (комментарий и ответ на комментарий).
-# Если чат, то должна быть дополнительная таблица М2М (пользователь, урок) к которой будут привязываться комментарии преподавателя и юзера.
-# В админке тогда будет сложная схема назначения уроков, создание экземпляров прямо в коде админки?
 
 
 class Lesson(models.Model):
@@ -59,7 +54,6 @@ class LessonClassAssignment(models.Model):
 
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="assignments", verbose_name="Урок")
     class_name = models.ForeignKey(Class, on_delete=models.PROTECT, related_name="assignments", verbose_name="Класс")
-    assigned_at = models.DateTimeField(auto_now_add=True, verbose_name=("Назначен"))
     deadline = models.DateTimeField(null=True, blank=True, verbose_name=("Дедлайн"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -72,6 +66,46 @@ class LessonClassAssignment(models.Model):
 
     def __str__(self):
         return f"Класс {self.class_name}, урок: {self.lesson.name[:20]}"
+
+    def get_max_score(self) -> int:
+        lesson = self.lesson
+
+        q_sum = TestQuestionElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
+        cb_sum = (
+            TestCheckboxElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("variants__points"))["total"]
+            or 0
+        )
+        kv_sum = (
+            TestKeyValueElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("keys__points"))["total"] or 0
+        )
+        essay_sum = TestEssayElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
+
+        return q_sum + cb_sum + kv_sum + essay_sum
+
+    def get_score_percentage(self, user_score: int) -> float:
+        max_score = self.get_max_score()
+        if max_score == 0:
+            return 0.0
+        return round((user_score / max_score) * 100, 2)
+
+    def get_grade(self, user_score: int) -> int:
+        """
+        Возвращает оценку (2, 3, 4 или 5) по шкале:
+          90–100% → 5
+          75–89%  → 4
+          50–74%  → 3
+          < 50%   → 2
+        """
+        percentage = self.get_score_percentage(user_score)
+
+        if percentage >= 90:
+            return 5
+        elif percentage >= 75:
+            return 4
+        elif percentage >= 50:
+            return 3
+        else:
+            return 2
 
 
 class LessonChildAssignment(models.Model):
@@ -87,6 +121,7 @@ class LessonChildAssignment(models.Model):
         verbose_name="Назначение урока классу",
     )
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=("Завершен"))
+    in_progress = models.BooleanField(default=False, verbose_name=("В процессе прохождения"))
     score = models.SmallIntegerField(null=True, blank=True, verbose_name=("Оценка"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -109,8 +144,8 @@ class TestQuestionElement(models.Model):
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="questions", verbose_name="Тест")
     question = models.TextField(verbose_name="Вопрос")
-    answer = models.CharField(max_length=255, verbose_name="Верный ответ")
-    points = models.SmallIntegerField(verbose_name="Балл")
+    answer = models.CharField(max_length=20, verbose_name="Верный ответ")
+    points = models.SmallIntegerField(default=1, verbose_name="Балл")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -136,8 +171,8 @@ class TestQuestionAnswer(models.Model):
     assignment = models.ForeignKey(
         LessonChildAssignment, related_name="answersQuestion", on_delete=models.CASCADE, verbose_name="Назначение урока"
     )
-    answer = models.CharField(max_length=255, verbose_name="Ответ")
-    is_correct = models.BooleanField(default=False, verbose_name="Правильно")
+    answer = models.CharField(max_length=20, verbose_name="Ответ")
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -175,8 +210,8 @@ class TestCheckboxVariant(models.Model):
     is_correct = models.BooleanField(default=False, verbose_name="Правильно")
 
     class Meta:
-        verbose_name = "Элемент теста: варианты для вопроса с чекбоксами"
-        verbose_name_plural = "Элементы теста: варианты для вопросов с чекбоксами"
+        verbose_name = "Вариант элемента теста: варианты для вопроса с чекбоксами"
+        verbose_name_plural = "Варианты элементов теста: варианты для вопросов с чекбоксами"
         ordering = ["-test_element"]
 
     def __str__(self):
@@ -199,6 +234,133 @@ class TestCheckboxAnswer(models.Model):
         verbose_name = "Ответ ученика: вопрос с чекбоксами"
         verbose_name_plural = "Ответы учеников: вопросы с чекбоксами"
         ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_checkbox_answer")]
 
     def __str__(self):
         return f"{self.question.question[:20]} - {self.answers}"
+
+
+class TestKeyValueElement(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="key_value", verbose_name="Тест")
+    description = models.CharField(max_length=255, verbose_name="Вопрос")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: вопрос с ключом и значением"
+        verbose_name_plural = "Элементы теста: вопросы с ключом и значением"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test.name[:20]} - {self.description[:20]}"
+
+
+class TestKeyVariant(models.Model):
+    """Элементы для сопоставления, ключ."""
+
+    test_element = models.ForeignKey(
+        TestKeyValueElement, related_name="keys", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    key = models.CharField(max_length=255, verbose_name="Ключ")
+    points = models.SmallIntegerField(default=0, verbose_name="Балл")
+
+    class Meta:
+        verbose_name = "Ключ"
+        verbose_name_plural = "Ключи"
+        ordering = ["key"]
+
+    def __str__(self):
+        return f"{self.test_element.description[:20]} - {self.key[:20]}"
+
+
+class TestValueVariant(models.Model):
+    """Элементы для сопоставления, значения."""
+
+    key = models.ForeignKey(TestKeyVariant, related_name="values", on_delete=models.CASCADE, verbose_name="Ключ")
+    value = models.CharField(max_length=255, verbose_name="Значение")
+
+    class Meta:
+        verbose_name = "Значение"
+        verbose_name_plural = "Значения"
+        ordering = ["key", "value"]
+
+    def __str__(self):
+        return f"{self.key.key[:20]} - {self.value[:20]}"
+
+
+class TestKeyValueAnswer(models.Model):
+    question = models.ForeignKey(
+        TestKeyValueElement, related_name="answers", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    assignment = models.ForeignKey(
+        LessonChildAssignment, related_name="answersKeyValue", on_delete=models.CASCADE, verbose_name="Назначение урока"
+    )
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
+    answers = models.JSONField(verbose_name="Ответы")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Ответ ученика: вопрос с ключом и значением"
+        verbose_name_plural = "Ответы учеников: вопросы с ключом и значением"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_key_value_answer")]
+
+    def __str__(self):
+        return f"{self.question.description[:20]} - {self.answers}"
+
+
+class TestEssayElement(models.Model):
+    """Элемент теста: эссе. Проверка преподавателем."""
+
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays", verbose_name="Тест")
+    question = models.CharField(max_length=1000, verbose_name="Вопрос")
+    points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: эссе"
+        verbose_name_plural = "Элементы теста: эссе"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test.name[:20]} - {self.question[:20]}"
+
+
+class TestEssayAnswer(models.Model):
+    """Ответ ученика на эссе."""
+
+    question = models.ForeignKey(
+        TestEssayElement, related_name="answers", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    assignment = models.ForeignKey(
+        LessonChildAssignment, related_name="answersEssay", on_delete=models.CASCADE, verbose_name="Назначение урока"
+    )
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
+    answer = models.TextField(verbose_name="Ответ")
+    is_verified = models.BooleanField(default=False, verbose_name="Проверен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Ответ ученика: эссе"
+        verbose_name_plural = "Ответы учеников: эссе"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_essay_answer")]
+
+    def __str__(self):
+        return f"{self.question.question[:20]} - {self.answer[:20]}"
+
+    def clean(self):
+        super().clean()
+        if self.points is not None and self.question_id is not None:
+            max_points = self.question.points
+            if self.points > max_points:
+                raise ValidationError(
+                    {"points": f"Баллы не могут превышать максимальное количество баллов в вопросе ({max_points})."}
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

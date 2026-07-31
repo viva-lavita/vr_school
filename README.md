@@ -24,7 +24,9 @@
 
 ### [Макет](https://www.figma.com/design/3JUgzspxSPlnTM0vo4hemh/Проект-Цифровая-школа?node-id=0-1&p=f)
 
-### Сайт
+### [Сайт] (http://212.8.229.10)
+
+### [API] (http://212.8.229.10/schema/swagger-ui/)
 
 ---
 

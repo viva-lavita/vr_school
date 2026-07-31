@@ -1,5 +1,6 @@
 import nested_admin
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 
@@ -11,8 +12,14 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAnswer,
+    TestEssayElement,
+    TestKeyValueAnswer,
+    TestKeyValueElement,
+    TestKeyVariant,
     TestQuestionAnswer,
     TestQuestionElement,
+    TestValueVariant,
 )
 
 AdminSite.empty_value_display = "-"
@@ -47,13 +54,35 @@ class TestCheckboxElementInline(nested_admin.NestedTabularInline):
     extra = 0
 
 
+class TestValueVariantInline(nested_admin.NestedTabularInline):
+    model = TestValueVariant
+    extra = 0
+
+
+class TestKeyVariantInline(nested_admin.NestedTabularInline):
+    model = TestKeyVariant
+    inlines = [TestValueVariantInline]
+    extra = 0
+
+
+class TestKeyValueElementInline(nested_admin.NestedTabularInline):
+    model = TestKeyValueElement
+    inlines = [TestKeyVariantInline]
+    extra = 0
+
+
+class TestEssayElementInline(nested_admin.NestedTabularInline):
+    model = TestEssayElement
+    extra = 0
+
+
 @admin.register(Test)
 class TestAdmin(nested_admin.NestedModelAdmin):  # Используем NestedModelAdmin
     list_display = ("id", "short_lesson", "short_name", "created_at", "updated_at")
     search_fields = ("lesson__name", "name", "lesson__teacher__last_name")
     show_facets = admin.ShowFacets.ALWAYS
     date_hierarchy = "created_at"
-    inlines = [TestQuestionElementInline, TestCheckboxElementInline]
+    inlines = [TestQuestionElementInline, TestCheckboxElementInline, TestKeyValueElementInline, TestEssayElementInline]
 
     @admin.display(description="Название")
     def short_name(self, obj):
@@ -66,7 +95,7 @@ class TestAdmin(nested_admin.NestedModelAdmin):  # Используем NestedMo
 
 @admin.register(LessonClassAssignment)
 class LessonClassAssignmentAdmin(admin.ModelAdmin):
-    list_display = ("id", "class_name", "lesson", "assigned_at", "deadline", "created_at", "updated_at")
+    list_display = ("id", "class_name", "lesson", "deadline", "created_at", "updated_at")
     search_fields = ("class_name__name", "lesson__name", "lesson__teacher__last_name")
     list_filter = ("lesson__teacher__subject__name", "lesson__teacher__school__name")
     show_facets = admin.ShowFacets.ALWAYS
@@ -135,9 +164,9 @@ class TestQuestionElementAdmin(admin.ModelAdmin):
 
 @admin.register(TestQuestionAnswer)
 class TestQuestionAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", "child", "question", "answer", "is_correct", "created_at", "updated_at")
+    list_display = ("id", "child", "question", "answer", "points", "created_at", "updated_at")
     search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
-    list_filter = ("is_correct",)
+    list_filter = ("question__test__lesson__teacher__subject__name",)
     date_hierarchy = "created_at"
     show_facets = admin.ShowFacets.ALWAYS
 
@@ -156,7 +185,6 @@ class TestCheckboxElementAdmin(admin.ModelAdmin):
     list_display = ("id", "short_test", "short_question", "created_at", "updated_at")
     search_fields = ("test__name",)
     date_hierarchy = "created_at"
-    show_facets = admin.ShowFacets.ALWAYS
     inlines = [TestCheckboxVariantInline]
 
     @admin.display(description="Тест")
@@ -186,7 +214,6 @@ class TestCheckboxAnswerAdmin(admin.ModelAdmin):
     list_display = ("id", "child", "question", "all_answers", "points", "created_at", "updated_at")
     search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
     date_hierarchy = "created_at"
-    show_facets = admin.ShowFacets.ALWAYS
 
     @admin.display(description="Ребенок")
     def child(self, obj):
@@ -201,19 +228,92 @@ class TestCheckboxAnswerAdmin(admin.ModelAdmin):
         return obj.question[:20] + "..."
 
 
-# if settings.DEBUG:
+class TestKeyValueAnswerForm(forms.ModelForm):
+    class Meta:
+        model = TestKeyValueAnswer
+        fields = "__all__"
 
-#     @admin.register(TestCheckboxVariant)
-#     class TestCheckboxVariantAdmin(admin.ModelAdmin):
-#         list_display = ("id", "question", "short_answer", "is_correct", "points", "created_at", "updated_at")
-#         search_fields = ("answer",)
-#         date_hierarchy = "created_at"
-#         show_facets = admin.ShowFacets.ALWAYS
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and hasattr(self.instance, "question"):
+            # Фильтруем варианты: только для текущего вопроса
+            self.fields["answers"].queryset = TestKeyVariant.objects.filter(test_element=self.instance.question)
 
-#         @admin.display(description="Ответ")
-#         def short_answer(self, obj):
-#             return obj.answer[:20]
 
-#         @admin.display(description="Вопрос")
-#         def question(self, obj):
-#             return obj.test_element.question[:20] + "..."
+@admin.register(TestKeyValueAnswer)
+class TestKeyValueAnswerAdmin(admin.ModelAdmin):
+    form = TestKeyValueAnswerForm
+    list_display = ("id", "child", "question", "assignment", "points", "created_at", "updated_at")
+    search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
+    date_hierarchy = "created_at"
+
+    @admin.display(description="Ребенок")
+    def child(self, obj):
+        return obj.assignment.child
+
+    @admin.display(description="Вопрос")
+    def question(self, obj):
+        return obj.question[:20] + "..."
+
+
+@admin.register(TestKeyValueElement)
+class TestKeyValueElementAdmin(nested_admin.NestedModelAdmin):
+    list_display = ("id", "short_test", "short_description", "created_at", "updated_at")
+    search_fields = ("test__name",)
+    date_hierarchy = "created_at"
+    inlines = [TestKeyVariantInline]
+
+    @admin.display(description="Тест")
+    def short_test(self, obj):
+        return obj.test.name[:20] + "..."
+
+    @admin.display(description="Описание")
+    def short_description(self, obj):
+        return obj.description[:20] + "..."
+
+
+@admin.register(TestEssayElement)
+class TestEssayElementAdmin(admin.ModelAdmin):
+    list_display = ("id", "short_test", "short_question", "points", "created_at", "updated_at")
+    search_fields = ("test__name",)
+    date_hierarchy = "created_at"
+
+    @admin.display(description="Тест")
+    def short_test(self, obj):
+        return obj.test.name[:20] + "..."
+
+    @admin.display(description="Вопрос")
+    def short_question(self, obj):
+        return obj.question[:20] + "..."
+
+
+@admin.register(TestEssayAnswer)
+class TestEssayAnswerAdmin(admin.ModelAdmin):
+    list_display = ("id", "child", "is_verified", "question", "points", "created_at", "updated_at")
+    search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
+    date_hierarchy = "created_at"
+    list_filter = ("is_verified",)
+    show_facets = admin.ShowFacets.ALWAYS
+
+    @admin.display(description="Ребенок")
+    def child(self, obj):
+        return obj.assignment.child
+
+
+# Для отладки, мб пригодится
+if settings.DEBUG:
+
+    @admin.register(TestCheckboxVariant)
+    class TestCheckboxVariantAdmin(admin.ModelAdmin):
+        list_display = ("id", "question", "short_answer", "is_correct", "points")
+        search_fields = ("answer",)
+        date_hierarchy = "test_element__created_at"
+        show_facets = admin.ShowFacets.ALWAYS
+
+        @admin.display(description="Ответ")
+        def short_answer(self, obj):
+            return obj.answer[:20]
+
+        @admin.display(description="Вопрос")
+        def question(self, obj):
+            return obj.test_element.question[:20] + "..."
