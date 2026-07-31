@@ -1,34 +1,29 @@
-FROM python:3.13 as build-image
+FROM python:3.13-slim
 
-RUN mkdir /backend
-ENV HOME="/backend"
-WORKDIR $HOME
+WORKDIR /backend
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=utf-8
-
-# Копируем uv
-COPY --from=ghcr.io/astral-sh/uv:0.6.16 /uv /uvx /bin/
-
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
-# Сначала копируем файлы зависимостей
+# Копируем uv
+COPY --from=ghcr.io/astral-sh/uv:0.6.17 /uv /uvx /bin/
+
+# Сначала только файлы зависимостей — чтобы кэш слоя работал
 COPY pyproject.toml uv.lock ./
 
-# Синхронизируем зависимости (без флага --no-install-project!)
+# Синхронизируем зависимости (без --no-install-project!)
+# --frozen сработает корректно, только если uv.lock свежий
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked
+    uv sync --frozen
 
-# Теперь копируем весь код проекта
+# Теперь копируем весь остальной проект
 COPY . .
 
-# Финальная синхронизация (--frozen --no-dev — нормально для прода)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+# Скрипты
+COPY scripts/ ./scripts/
+RUN chmod a+x ./scripts/*
 
 # Добавляем venv в PATH
-ENV PATH="$HOME/.venv/bin:$PATH"
-
-COPY /scripts /scripts/
-RUN chmod a+x /scripts/*
+ENV PATH="/backend/.venv/bin:$PATH"

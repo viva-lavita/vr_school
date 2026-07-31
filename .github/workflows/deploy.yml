@@ -101,6 +101,9 @@ jobs:
           echo "EMAIL_HOST=${{ secrets.EMAIL_HOST }}" >> .env
           echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL  }}" >> .env
           echo "NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}" >> .env
+          echo "grade_5_percent=${{ secrets.grade_5_percent }}" >> .env
+          echo "grade_4_percent=${{ secrets.grade_4_percent }}" >> .env
+          echo "grade_3_percent=${{ secrets.grade_3_percent }}" >> .env
 
       - name: Upload .env
         uses: actions/upload-artifact@v4
