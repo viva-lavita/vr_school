@@ -22,6 +22,8 @@ services:
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     depends_on:
+      # - db
+      # - redis
       db:
         condition: service_healthy
         restart: true

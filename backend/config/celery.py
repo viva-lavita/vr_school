@@ -2,6 +2,7 @@ import os
 from functools import wraps
 
 from celery import Celery
+from django.conf import settings  # noqa
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
