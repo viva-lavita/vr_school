@@ -75,7 +75,7 @@ services:
       - default
 
   celery:
-    build: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     depends_on:
       - backend
       - redis
@@ -88,7 +88,7 @@ services:
     command: celery -A config worker --loglevel=info
 
   celery_beat:
-    build: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     env_file: .env
     command: celery -A config beat -l info
     volumes:

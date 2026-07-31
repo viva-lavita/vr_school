@@ -55,6 +55,40 @@ services:
     networks:
       - default
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+
+  celery:
+    build: ./backend
+    depends_on:
+      - backend
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/backend
+      - media:/backend/media
+    networks:
+      - default
+    command: celery -A config worker --loglevel=info
+
+  celery_beat:
+    build: ./backend
+    env_file: .env
+    command: celery -A config beat -l info
+    volumes:
+      - ./logs:/backend/logs
+      - ./backend:/backend
+      - media:/backend/media
+    depends_on:
+      - celery
+    networks:
+      - default
+
 networks:
   default:
     driver: bridge
