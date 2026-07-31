@@ -33,7 +33,7 @@ export default function LessonsPage() {
     setLoadingLessons(true);
     getLessons({ subject: activeSubject, page: currentPage }).then((data) => {
       setLessons(data.results);
-      setTotalPages(data.total_pages);
+      setTotalPages(data.total_pages ?? Math.ceil((data.count ?? 0) / 4));
       setLoadingLessons(false);
     });
   }, [activeSubject, currentPage]);
@@ -47,6 +47,12 @@ export default function LessonsPage() {
     router.push("/");
   };
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -56,8 +62,7 @@ export default function LessonsPage() {
   }
 
   if (!user) {
-    router.push("/login");
-    return null;
+    return null; 
   }
 
   return (

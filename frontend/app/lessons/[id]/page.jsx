@@ -17,6 +17,7 @@ export default function LessonPage() {
   const [lesson, setLesson] = useState(null);
   const [loadingLesson, setLoadingLesson] = useState(true);
   const [activeTab, setActiveTab] = useState("materials");
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -186,13 +187,18 @@ export default function LessonPage() {
                 allowFullScreen
                 title={lesson.name}
               />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="xl:w-[120px] xl:h-[120px] lg:w-[100px] lg:h-[100px] w-[60px] h-[60px] rounded-full bg-[#FFB62F] flex items-center justify-center opacity-80">
-                  <svg width="32" height="38" viewBox="0 0 32 38" fill="none">
-                    <path d="M30 16.268C31.3339 17.0378 31.3339 18.9622 30 19.732L4 35.3205C2.66607 36.0903 1 35.1281 1 33.5885L1 2.41154C1 0.871933 2.66607 -0.0902537 4 0.679497L30 16.268Z" fill="white" />
-                  </svg>
+              {!videoPlaying && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+                  onClick={() => setVideoPlaying(true)}
+                >
+                  <div className="xl:w-[120px] xl:h-[120px] lg:w-[100px] lg:h-[100px] w-[60px] h-[60px] rounded-full bg-[#FFB62F] flex items-center justify-center opacity-80">
+                    <svg width="32" height="38" viewBox="0 0 32 38" fill="none">
+                      <path d="M30 16.268C31.3339 17.0378 31.3339 18.9622 30 19.732L4 35.3205C2.66607 36.0903 1 35.1281 1 33.5885L1 2.41154C1 0.871933 2.66607 -0.0902537 4 0.679497L30 16.268Z" fill="white" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

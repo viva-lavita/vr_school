@@ -7,11 +7,11 @@ export default function TestTab({ lesson, user, onBackToMaterials }) {
   const tests = lesson.tests || [];
 
   return (
-    <div className="flex flex-col gap-10 mb-20">
+    <div className="flex flex-col gap-5 mb-10">
       {/* Comment block */}
       {comment && (
         <div
-          className="w-full rounded-[32px] px-6 py-8 md:px-[60px] md:py-[67px]"
+          className="w-full rounded-[32px] px-5 py-5 md:px-10 md:py-8"
           style={{ background: "#D4F9E1" }}
         >
           <p

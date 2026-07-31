@@ -3,39 +3,220 @@ import { subjects, lessons } from "@/shared/data/mockLessons";
 
 const ITEMS_PER_PAGE = 4;
 
-export async function getSubjects() {
-  try {
-    const data = await apiFetch("subject/");
-    return data?.results ?? subjects;
-  } catch {
-    return subjects;
+function normalizeLesson(lesson) {
+  return {
+    ...lesson,
+    id: lesson.pk ?? lesson.id,
+  };
+}
+
+function normalizeTestQuestion(q, type) {
+  return {
+    ...q,
+    id: q.pk ?? q.id,
+    type,
+    question: q.question,
+    ...(q.variants
+      ? {
+          options: q.variants.map((v) => v.answer),
+          optionIds: q.variants.map((v) => v.pk ?? v.id),
+        }
+      : {}),
+  };
+}
+
+function normalizeTestDetail(detail) {
+  const questions = [];
+
+  if (detail.q_tests) {
+    for (const q of detail.q_tests) {
+      questions.push(normalizeTestQuestion(q, "text"));
+    }
   }
+
+  if (detail.checkbox_tests) {
+    for (const q of detail.checkbox_tests) {
+      questions.push(normalizeTestQuestion(q, "checkbox"));
+    }
+  }
+
+  if (detail.key_value_tests) {
+    for (const q of detail.key_value_tests) {
+      questions.push(normalizeTestQuestion(q, "matching"));
+    }
+  }
+
+  if (detail.essay_test) {
+    const essays = Array.isArray(detail.essay_test) ? detail.essay_test : [detail.essay_test];
+    for (const q of essays) {
+      questions.push(normalizeTestQuestion(q, "essay"));
+    }
+  }
+
+  return {
+    ...detail,
+    id: detail.pk ?? detail.id,
+    questions,
+  };
+}
+
+export async function getSubjects() {
+  return subjects;
 }
 
 export async function getLessons({ subject, page = 1 } = {}) {
   try {
     const params = new URLSearchParams();
-    if (subject) params.set("subject", subject);
+    if (subject) params.set("search", subject);
     params.set("page", page);
     const data = await apiFetch(`lessons/?${params}`);
-    return data;
-  } catch {
-    let filtered = lessons;
-    if (subject) {
-      filtered = lessons.filter((l) => l.subject === Number(subject));
+    if (data.results?.length > 0) {
+      return {
+        results: data.results.map(normalizeLesson),
+        count: data.count ?? 0,
+        total_pages: Math.ceil((data.count ?? 0) / ITEMS_PER_PAGE),
+      };
     }
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const results = filtered.slice(start, start + ITEMS_PER_PAGE);
-    return { results, count: total, total_pages: totalPages };
+  } catch {
+    // fall through to mocks
   }
+
+  let filtered = lessons;
+  if (subject) {
+    filtered = lessons.filter((l) => l.subject === Number(subject));
+  }
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const results = filtered.slice(start, start + ITEMS_PER_PAGE);
+  return { results, count: total, total_pages: totalPages };
 }
 
 export async function getLesson(id) {
   try {
-    return await apiFetch(`lessons/${id}/`);
+    const lesson = await apiFetch(`lessons/${id}/`);
+    if (lesson?.pk) {
+      const normalized = normalizeLesson(lesson);
+
+      let tests = [];
+      try {
+        const testsList = await apiFetch(`tests/?search=${id}`);
+        if (testsList.results?.length) {
+          const testPromises = testsList.results.map(async (t) => {
+            try {
+              const detail = await apiFetch(`tests/${t.pk ?? t.id}/test_detail/`);
+              return normalizeTestDetail({ ...t, ...detail });
+            } catch {
+              return { ...normalizeLesson(t), questions: [] };
+            }
+          });
+          tests = await Promise.all(testPromises);
+        }
+      } catch {
+        // no tests
+      }
+
+      return {
+        ...normalized,
+        test_comment: normalized.test_comment ?? normalized.description ?? "",
+        tests,
+      };
+    }
   } catch {
-    return lessons.find((l) => l.id === Number(id)) ?? null;
+    // fall through to mock
   }
+
+  return lessons.find((l) => l.id === Number(id)) ?? null;
+}
+
+// --- Test answers ---
+
+export async function getQuestionAnswer(questionId) {
+  try {
+    return await apiFetch(`test-answers/question/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+export async function submitAnswer(questionId, answer) {
+  return apiFetch(`test-answers/question/${questionId}/`, {
+    method: "POST",
+    body: { answer },
+  });
+}
+
+export async function submitCheckboxAnswer(questionId, answerIds) {
+  return apiFetch(`test-answers/checkbox/${questionId}/`, {
+    method: "POST",
+    body: { answers: answerIds },
+  });
+}
+
+export async function getCheckboxAnswers(questionId) {
+  try {
+    return await apiFetch(`test-answers/checkbox/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+export async function submitEssayAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay/${questionId}/`, {
+    method: "POST",
+    body: { answer },
+  });
+}
+
+export async function getEssayAnswers(questionId) {
+  try {
+    return await apiFetch(`test-answers/essay/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+export async function submitKeyValueAnswer(questionId, answers) {
+  return apiFetch(`test-answers/key-value/${questionId}/`, {
+    method: "POST",
+    body: { answers },
+  });
+}
+
+export async function getKeyValueAnswers(questionId) {
+  try {
+    return await apiFetch(`test-answers/key-value/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+// --- PATCH (обновление существующих ответов) ---
+
+export async function updateAnswer(questionId, answer) {
+  return apiFetch(`test-answers/question/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answer },
+  });
+}
+
+export async function updateCheckboxAnswer(questionId, answerIds) {
+  return apiFetch(`test-answers/checkbox/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answers: answerIds },
+  });
+}
+
+export async function updateEssayAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answer },
+  });
+}
+
+export async function updateKeyValueAnswer(questionId, answers) {
+  return apiFetch(`test-answers/key-value/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answers },
+  });
 }

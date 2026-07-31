@@ -6,36 +6,35 @@
  * Теги (зелёные) внизу в зелёной полоске.
  * На десктопе: лейблы и зоны рядом. На мобилке: чередование.
  */
-export default function QuestionMatching({ question, answer, onChange, draggedTag, setDraggedTag }) {
+export default function QuestionMatching({ question, answer, onChange, draggedTag, setDraggedTag, disabled }) {
   const labels = question.labels || [];
-  const placedTags = Object.values(answer || {});
+  const tags = question.tags || [];
+  const placedIndices = Object.values(answer || {});
 
-  // Разместить тег в первую пустую зону
-  const placeTag = (tag) => {
+  const placeTag = (tagIndex) => {
+    if (disabled) return;
     const updated = { ...(answer || {}) };
     for (let i = 0; i < labels.length; i++) {
-      if (!updated[i]) { updated[i] = tag; break; }
+      if (updated[i] === undefined) { updated[i] = tagIndex; break; }
     }
     onChange(updated);
   };
 
-  // Убрать тег из зоны
   const removeTag = (zoneIndex) => {
+    if (disabled) return;
     const updated = { ...(answer || {}) };
     delete updated[zoneIndex];
     onChange(updated);
   };
 
-  // Drop обработчик
   const handleDrop = (zoneIndex, e) => {
     e.preventDefault();
     e.currentTarget.style.background = "";
-    if (draggedTag) {
-      const updated = { ...(answer || {}) };
-      updated[zoneIndex] = draggedTag;
-      onChange(updated);
-      setDraggedTag(null);
-    }
+    if (disabled || draggedTag === null) return;
+    const updated = { ...(answer || {}) };
+    updated[zoneIndex] = draggedTag;
+    onChange(updated);
+    setDraggedTag(null);
   };
 
   // Рендер зоны
@@ -45,11 +44,11 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = "#FFF3E0"; }}
       onDragLeave={(e) => { e.currentTarget.style.background = ""; }}
       onDrop={(e) => handleDrop(i, e)}>
-      {answer?.[i] && (
+      {answer?.[i] !== undefined && (
         <span className="inline-flex items-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer"
           onClick={() => removeTag(i)}
           style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase" }}>
-          {answer[i]}
+          {tags[answer[i]]}
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 3L3 11M3 3L11 11" stroke="#222222" strokeWidth="1.5" strokeLinecap="round" /></svg>
         </span>
       )}
@@ -94,15 +93,17 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       {/* Теги в зелёной полоске */}
       <div className="w-full rounded-xl p-6 min-h-[79px] flex flex-wrap justify-center items-center gap-3"
         style={{ background: "#D4F9E1" }}>
-        {(question.tags || []).filter((tag) => !placedTags.includes(tag)).map((tag, i) => (
-          <button key={i} type="button" draggable
-            onDragStart={() => setDraggedTag(tag)}
-            onDragEnd={() => setDraggedTag(null)}
-            onClick={() => placeTag(tag)}
-            className="px-6 py-1.5 rounded-xl cursor-pointer"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}>
-            {tag}
-          </button>
+        {tags.map((tag, i) => (
+          !placedIndices.includes(i) && (
+            <button key={i} type="button" draggable
+              onDragStart={() => setDraggedTag(i)}
+              onDragEnd={() => setDraggedTag(null)}
+              onClick={() => placeTag(i)}
+              className="px-6 py-1.5 rounded-xl cursor-pointer"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}>
+              {tag}
+            </button>
+          )
         ))}
       </div>
     </div>

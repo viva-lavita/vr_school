@@ -2,53 +2,46 @@
 
 import { useState } from "react";
 
-/**
- * Тип задания №4 — Задание на соответствие с НЕСКОЛЬКИМИ ответами.
- * Каждый лейбл может иметь несколько тегов.
- * На мобилке: клик по зоне выбирает её, клик по тегу добавляет в выбранную зону.
- * На десктопе: drag&drop + клик.
- */
-export default function QuestionMatchingMulti({ question, answer, onChange, draggedTag, setDraggedTag }) {
+export default function QuestionMatchingMulti({ question, answer, onChange, draggedTag, setDraggedTag, disabled }) {
   const labels = question.labels || [];
+  const tags = question.tags || [];
   const [selectedZone, setSelectedZone] = useState(null);
 
-  // Получить теги для зоны (всегда массив)
-  const getZoneTags = (i) => {
+  // Получить индексы тегов для зоны (всегда массив)
+  const getZoneTagIndices = (i) => {
     const val = answer?.[i];
-    return Array.isArray(val) ? val : (val ? [val] : []);
+    return Array.isArray(val) ? val : (val !== undefined ? [val] : []);
   };
 
-  // Добавить тег в зону
-  const addTagToZone = (zoneIndex, tag) => {
+  const addTagToZone = (zoneIndex, tagIndex) => {
+    if (disabled) return;
     const updated = { ...(answer || {}) };
-    const arr = getZoneTags(zoneIndex);
-    if (!arr.includes(tag)) {
-      arr.push(tag);
+    const arr = getZoneTagIndices(zoneIndex);
+    if (!arr.includes(tagIndex)) {
+      arr.push(tagIndex);
       updated[zoneIndex] = arr;
       onChange(updated);
     }
   };
 
-  // Убрать тег из зоны
-  const removeTagFromZone = (zoneIndex, tag) => {
+  const removeTagFromZone = (zoneIndex, tagIndex) => {
+    if (disabled) return;
     const updated = { ...(answer || {}) };
-    updated[zoneIndex] = getZoneTags(zoneIndex).filter((t) => t !== tag);
+    updated[zoneIndex] = getZoneTagIndices(zoneIndex).filter((t) => t !== tagIndex);
     onChange(updated);
   };
 
-  // Обработчик drop (для drag&drop)
   const handleDrop = (zoneIndex, e) => {
     e.preventDefault();
     e.currentTarget.style.background = "";
-    if (draggedTag) {
-      addTagToZone(zoneIndex, draggedTag);
-      setDraggedTag(null);
-    }
+    if (disabled || draggedTag === null) return;
+    addTagToZone(zoneIndex, draggedTag);
+    setDraggedTag(null);
   };
 
-  // Рендер зоны с несколькими тегами
+  // Рендер зоны
   const renderZone = (i) => {
-    const zoneTags = getZoneTags(i);
+    const zoneTagIndices = getZoneTagIndices(i);
     const isSelected = selectedZone === i;
     return (
       <div
@@ -60,12 +53,12 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
         onDragLeave={(e) => { if (!isSelected) e.currentTarget.style.background = ""; }}
         onDrop={(e) => handleDrop(i, e)}
       >
-        {zoneTags.map((tag, ti) => (
+        {zoneTagIndices.map((tagIndex, ti) => (
           <span key={ti}
             className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer w-full"
-            onClick={(e) => { e.stopPropagation(); removeTagFromZone(i, tag); }}
+            onClick={(e) => { e.stopPropagation(); removeTagFromZone(i, tagIndex); }}
             style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase" }}>
-            {tag}
+            {tags[tagIndex]}
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M11 3L3 11M3 3L11 11" stroke="#222222" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -75,17 +68,16 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
     );
   };
 
-  // Все размещённые теги (для фильтрации в зелёной полоске)
-  const allPlacedTags = Object.values(answer || {}).flat();
+  // Все размещённые индексы тегов
+  const allPlacedIndices = Object.values(answer || {}).flat();
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Подсказка */}
       <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
         {question.hint || "Перетащите все подходящие характеристики. Внимание! Каждому лейблу может соответствовать несколько тэгов!"}
       </p>
 
-      {/* Десктоп: лейблы слева, зоны справа */}
+      {/* Десктоп */}
       <div className="hidden lg:flex gap-5">
         <div className="flex flex-col gap-5 flex-1">
           {labels.map((label, i) => (
@@ -100,7 +92,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
         </div>
       </div>
 
-      {/* Мобилка: чередование */}
+      {/* Мобилка */}
       <div className="flex flex-col lg:hidden gap-4">
         {labels.map((label, i) => (
           <div key={i} className="flex flex-col gap-2">
@@ -113,36 +105,36 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
         ))}
       </div>
 
-      {/* Подсказка для мобилки */}
       <p className="w-full text-center text-input text-dark md:hidden" style={{ fontStyle: "italic" }}>
         Нажмите на оранжевую зону сверху, затем на тег
       </p>
 
-      {/* Теги в зелёной полоске */}
+      {/* Теги */}
       <div className="w-full rounded-xl p-6 min-h-[79px] flex flex-wrap justify-center items-center gap-3"
         style={{ background: "#D4F9E1" }}>
-        {(question.tags || []).filter((tag) => !allPlacedTags.includes(tag)).map((tag, i) => (
-          <button key={i} type="button" draggable
-            onDragStart={() => setDraggedTag(tag)}
-            onDragEnd={() => setDraggedTag(null)}
-            onClick={() => {
-              if (selectedZone !== null) {
-                addTagToZone(selectedZone, tag);
-              } else {
-                // Клик без выбранной зоны — ставим в первую пустую
-                for (let j = 0; j < labels.length; j++) {
-                  if (getZoneTags(j).length === 0) {
-                    addTagToZone(j, tag);
-                    break;
+        {tags.map((tag, i) => (
+          !allPlacedIndices.includes(i) && (
+            <button key={i} type="button" draggable
+              onDragStart={() => setDraggedTag(i)}
+              onDragEnd={() => setDraggedTag(null)}
+              onClick={() => {
+                if (selectedZone !== null) {
+                  addTagToZone(selectedZone, i);
+                } else {
+                  for (let j = 0; j < labels.length; j++) {
+                    if (getZoneTagIndices(j).length === 0) {
+                      addTagToZone(j, i);
+                      break;
+                    }
                   }
                 }
-              }
-            }}
-            className="px-6 py-1.5 rounded-xl cursor-pointer"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}
-          >
-            {tag}
-          </button>
+              }}
+              className="px-6 py-1.5 rounded-xl cursor-pointer"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}
+            >
+              {tag}
+            </button>
+          )
         ))}
       </div>
     </div>

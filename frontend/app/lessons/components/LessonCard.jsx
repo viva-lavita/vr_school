@@ -10,6 +10,7 @@ const STATUS_CONFIG = {
 
 export default function LessonCard({ lesson, number }) {
   const status = STATUS_CONFIG[lesson.status] || STATUS_CONFIG.new;
+  const image = lesson.image || "/images/vr-headset-portrait.png";
 
   const titleStyle = {
     fontFamily: "var(--font-display)",
@@ -48,7 +49,7 @@ export default function LessonCard({ lesson, number }) {
           </p>
         </div>
         <div className="w-full h-[200px] rounded-xl overflow-hidden">
-          <img src={lesson.image} alt={lesson.name} className="w-full h-full object-cover" />
+          <img src={image} alt={lesson.name} className="w-full h-full object-cover" />
         </div>
         <span
           className={`inline-flex items-center self-start px-3 py-1 rounded-xl border ${status.borderColor} ${status.textColor}`}
@@ -77,7 +78,7 @@ export default function LessonCard({ lesson, number }) {
           </span>
         </div>
         <div className="w-[200px] h-[200px] shrink-0 rounded-xl overflow-hidden">
-          <img src={lesson.image} alt={lesson.name} className="w-full h-full object-cover" />
+          <img src={image} alt={lesson.name} className="w-full h-full object-cover" />
         </div>
       </div>
     </Link>
