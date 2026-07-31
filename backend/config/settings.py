@@ -57,6 +57,7 @@ INSTALLED_APPS += [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "nested_admin",
+    "django_celery_beat",
 ]
 
 # apps
@@ -279,6 +280,8 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000 if DEBUG else 2000
+
 
 ########################
 #  SWAGGER
@@ -314,3 +317,45 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_SERVER = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
+
+
+########################
+#  REDIS AND CELERY
+########################
+REDIS_HOST = "127.0.0.1" if OPERATING_SYSTEM == "Windows" else "redis"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:6379",
+        # "LOCATION": "redis://username:password@127.0.0.1:6379", # pragma: allowlist secret
+        # TODO: добавить пароль в будущем
+        # TODO: https://django.fun/docs/django/5.0/topics/cache/   и репликацию
+        "OPTIONS": {
+            "db": "1",
+            "parser_class": "redis.connection.PythonParser",
+            "pool_class": "redis.BlockingConnectionPool",
+        },
+    },
+}
+
+REDIS_PORT = "6379"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_BROKEN_TRANSPORT_OPTIONS = {"visibility_timeout": 3600}
+CELERY_TASK_ACKS_LATE = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+if DEBUG:
+    CELERY_BEAT_SCHEDULE = {}
+else:
+    CELERY_BEAT_SCHEDULE = {
+        # 'send_email': {
+        #     'task': 'users.tasks.send_email',
+        #     'schedule': crontab(minute='*/1'),
+        # },
+    }

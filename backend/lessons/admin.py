@@ -95,7 +95,7 @@ class TestAdmin(nested_admin.NestedModelAdmin):  # Используем NestedMo
 
 @admin.register(LessonClassAssignment)
 class LessonClassAssignmentAdmin(admin.ModelAdmin):
-    list_display = ("id", "class_name", "lesson", "assigned_at", "deadline", "created_at", "updated_at")
+    list_display = ("id", "class_name", "lesson", "deadline", "created_at", "updated_at")
     search_fields = ("class_name__name", "lesson__name", "lesson__teacher__last_name")
     list_filter = ("lesson__teacher__subject__name", "lesson__teacher__school__name")
     show_facets = admin.ShowFacets.ALWAYS

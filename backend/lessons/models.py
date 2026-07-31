@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
 
 from users.models import Child, Class, Teacher
 
@@ -53,7 +54,6 @@ class LessonClassAssignment(models.Model):
 
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="assignments", verbose_name="Урок")
     class_name = models.ForeignKey(Class, on_delete=models.PROTECT, related_name="assignments", verbose_name="Класс")
-    assigned_at = models.DateTimeField(auto_now_add=True, verbose_name=("Назначен"))
     deadline = models.DateTimeField(null=True, blank=True, verbose_name=("Дедлайн"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -66,6 +66,46 @@ class LessonClassAssignment(models.Model):
 
     def __str__(self):
         return f"Класс {self.class_name}, урок: {self.lesson.name[:20]}"
+
+    def get_max_score(self) -> int:
+        lesson = self.lesson
+
+        q_sum = TestQuestionElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
+        cb_sum = (
+            TestCheckboxElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("variants__points"))["total"]
+            or 0
+        )
+        kv_sum = (
+            TestKeyValueElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("keys__points"))["total"] or 0
+        )
+        essay_sum = TestEssayElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
+
+        return q_sum + cb_sum + kv_sum + essay_sum
+
+    def get_score_percentage(self, user_score: int) -> float:
+        max_score = self.get_max_score()
+        if max_score == 0:
+            return 0.0
+        return round((user_score / max_score) * 100, 2)
+
+    def get_grade(self, user_score: int) -> int:
+        """
+        Возвращает оценку (2, 3, 4 или 5) по шкале:
+          90–100% → 5
+          75–89%  → 4
+          50–74%  → 3
+          < 50%   → 2
+        """
+        percentage = self.get_score_percentage(user_score)
+
+        if percentage >= 90:
+            return 5
+        elif percentage >= 75:
+            return 4
+        elif percentage >= 50:
+            return 3
+        else:
+            return 2
 
 
 class LessonChildAssignment(models.Model):
