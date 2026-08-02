@@ -18,11 +18,6 @@ urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
 ]
 
-if settings.ENABLE_DEBUG_TOOLBAR:
-    import debug_toolbar
-
-    urlpatterns += [path("debug/ ", include(debug_toolbar.urls))]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

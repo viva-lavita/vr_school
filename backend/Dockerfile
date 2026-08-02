@@ -15,8 +15,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.6.16 /uv /uvx /bin/
 # Сначала только файлы зависимостей — чтобы кэш слоя работал
 COPY pyproject.toml uv.lock ./
 
-# Синхронизируем зависимости (без --no-install-project!)
-# --frozen сработает корректно, только если uv.lock свежий
+# Синхронизируем зависимости
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 

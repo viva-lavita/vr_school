@@ -22,8 +22,6 @@ services:
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     depends_on:
-      # - db
-      # - redis
       db:
         condition: service_healthy
         restart: true
@@ -39,6 +37,7 @@ services:
     volumes:
       - static:/backend/static/
       - media:/backend/media/
+      - ./logs:/var/log/app
     command: bash /scripts/start-prod.sh
 
   frontend:
@@ -54,6 +53,8 @@ services:
     networks:
       - default
     command: sh -c 'npm run start'
+    # command: sh -c 'next start'  # попробовать как зальют
+
 
   nginx:
     image: nginx:alpine
@@ -71,32 +72,40 @@ services:
 
   redis:
     image: redis:alpine
-    # ports:
-    #   - "6379:6379"
     networks:
       - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   celery:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     depends_on:
-      - backend
-      - redis
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
     env_file:
       - .env
     volumes:
       - media:/backend/media
+      - ./logs:/var/log/app
     networks:
       - default
-    command: celery -A config worker --loglevel=info
+    command: /backend/.venv/bin/celery -A config worker --loglevel=info
 
   celery_beat:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     env_file: .env
-    command: celery -A config beat -l info
+    command: /backend/.venv/bin/celery -A config beat -l info
     volumes:
       - media:/backend/media
+      - ./logs:/var/log/app
     depends_on:
-      - celery
+      celery:
+        condition: service_started
     networks:
       - default
 
