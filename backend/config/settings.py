@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from platform import system
 
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 try:
@@ -154,18 +155,6 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-ENABLE_DEBUG_TOOLBAR = DEBUG and not TESTING
-if ENABLE_DEBUG_TOOLBAR:
-    INSTALLED_APPS.append("debug_toolbar")
-    MIDDLEWARE = [
-        "debug_toolbar.middleware.DebugToolbarMiddleware",
-        *MIDDLEWARE,
-    ]
-    INTERNAL_IPS = [
-        "127.0.0.1",
-    ]
 
 
 ########################
@@ -328,9 +317,6 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": f"redis://{REDIS_HOST}:6379",
-        # "LOCATION": "redis://username:password@127.0.0.1:6379", # pragma: allowlist secret
-        # TODO: добавить пароль в будущем
-        # TODO: https://django.fun/docs/django/5.0/topics/cache/   и репликацию
         "OPTIONS": {
             "db": "1",
             "parser_class": "redis.connection.PythonParser",
@@ -351,11 +337,121 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
 if DEBUG:
-    CELERY_BEAT_SCHEDULE = {}
+    CELERY_BEAT_SCHEDULE = {
+        "debug_task": {"task": "api.tasks.debug_task", "schedule": crontab(minute="*/30"), "args": ()},
+        "recalculate-missing-scores": {
+            "task": "app.tasks.recalculate_missing_scores",
+            "schedule": crontab(minute="*/180"),  # каждые 180 минут = 3 часа
+        },
+    }
 else:
     CELERY_BEAT_SCHEDULE = {
-        # 'send_email': {
-        #     'task': 'users.tasks.send_email',
-        #     'schedule': crontab(minute='*/1'),
-        # },
+        "recalculate-missing-scores": {
+            "task": "app.tasks.recalculate_missing_scores",
+            "schedule": crontab(minute="*/180"),  # каждые 180 минут = 3 часа
+        },
     }
+
+
+########################
+#  LOGGING
+########################
+LOGS_DIR = Path("/var/log/app")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def safe_file_handler(filename, formatter_name, level="INFO", max_bytes=5 * 1024 * 1024, backup_count=5):
+    """Безопасный FileHandler с проверкой прав и созданием папки."""
+    full_path = LOGS_DIR / filename
+    return {
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(full_path),
+        "formatter": formatter_name,
+        "level": level,
+        "maxBytes": max_bytes,
+        "backupCount": backup_count,
+        "encoding": "utf-8",
+        "mode": "a",
+    }
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "console": {
+            "format": "{asctime} | {name:20} | {levelname:8} | {module:12} | {message}",
+            "style": "{",
+        },
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
+            "json_ensure_ascii": False,
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+            "formatter": "console",
+        },
+        "all_errors": safe_file_handler(
+            "all_errors.log", "json", level="ERROR", max_bytes=10 * 1024 * 1024, backup_count=10
+        ),
+        "root_log": safe_file_handler("root.log", "json", level="WARNING", max_bytes=20 * 1024 * 1024, backup_count=10),
+        "tasks": safe_file_handler(
+            "tasks.log", "json", level="DEBUG" if DEBUG else "WARNING", max_bytes=5 * 1024 * 1024, backup_count=5
+        ),
+        "celery": safe_file_handler(
+            "celery.log", "json", level="INFO" if DEBUG else "WARNING", max_bytes=5 * 1024 * 1024, backup_count=5
+        ),
+        "request": safe_file_handler(
+            "request.log", "json", level="INFO" if DEBUG else "WARNING", max_bytes=10 * 1024 * 1024, backup_count=10
+        ),
+        "AI_log": safe_file_handler(
+            "AI.log", "json", level="INFO" if DEBUG else "WARNING", max_bytes=5 * 1024 * 1024, backup_count=5
+        ),
+    },
+    "loggers": {
+        "": {  # root
+            "handlers": ["root_log", "console"] if DEBUG else ["root_log"],
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "tasks": {
+            "handlers": ["console", "tasks"] if DEBUG else ["tasks"],
+            "level": "DEBUG" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "django": {
+            "handlers": ["console", "all_errors"] if DEBUG else ["all_errors"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console", "request"] if DEBUG else ["request"],
+            "level": "INFO" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "AI": {
+            "handlers": ["console", "AI_log"] if DEBUG else ["AI_log"],
+            "level": "INFO" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console", "celery"] if DEBUG else ["celery"],
+            "level": "INFO" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "celery.worker": {
+            "handlers": ["console", "celery"] if DEBUG else ["celery"],
+            "level": "INFO" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "celery.beat": {
+            "handlers": ["console", "celery"] if DEBUG else ["celery"],
+            "level": "INFO" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+    },
+}
