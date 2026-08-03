@@ -118,7 +118,6 @@ class LessonChildAssignmentAdmin(admin.ModelAdmin):
         "child",
         "class_assignment",
         "score",
-        "assigned_at",
         "completed_at",
         "deadline",
         "created_at",
@@ -140,10 +139,6 @@ class LessonChildAssignmentAdmin(admin.ModelAdmin):
     @admin.display(description="Дедлайн")
     def deadline(self, obj):
         return obj.class_assignment.deadline
-
-    @admin.display(description="Назначен")
-    def assigned_at(self, obj):
-        return obj.class_assignment.assigned_at
 
 
 @admin.register(TestQuestionElement)
