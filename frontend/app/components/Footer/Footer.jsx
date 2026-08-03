@@ -1,87 +1,52 @@
-import { montserrat } from "@/lib/fonts";
-import { inter } from "@/lib/fonts";
 import Link from "next/link";
+import styles from "./Footer.module.css";
 
 export default function Footer() {
   return (
-    <div
-      className="w-screen h-53.5"
-      style={{ backgroundColor: "#F6FFDE" }}
-    >
-      <footer
-        className={`${montserrat.className} flex w-[1400px] pt-10 pb-4 mx-auto h-full justify-between`}
-        style={{ color: "#040404" }}
-      >
-        <div className="flex flex-col justify-between mr-[5%]">
-          <div className={`font-semibold text-lg flex flex-col gap-2`}>
-            <p>+7 3822 71-67-69</p>
-            <p>perspectiva@education70.ru</p>
+    <footer className="w-full bg-black text-text">
+      <div className={`page-container ${styles.footerGrid} gap-x-6 gap-y-4 content-between items-start py-10`}>
+        <img
+          src="/icons/logo/logo.svg"
+          alt="logo"
+          className="[grid-area:logo]"
+        />
+
+        <div className="[grid-area:contacts] min-[1920px]:contents flex flex-col gap-5">
+          <div className="min-[1920px]:[grid-area:phone] flex flex-col gap-1">
+            <span className="text-marginalia text-gray">ТЕЛЕФОН</span>
+            <p className="text-h4 text-white">+7 (8522) 63-76-41</p>
           </div>
-          <p className={`font-normal text-sm`}>
-            © 2025 МАОУ Школа «Перспектива» г. Томск
-          </p>
-        </div>
-        <div className={`font-medium text-base flex flex-col gap-2 mr-[13%]`}>
-          <nav>
-            <ul>
-              <li>
-                <Link href="/about">О проекте</Link>
-              </li>
-              <li>
-                <Link href="/news">Новости</Link>
-              </li>
-              <li>
-                <Link href="/catalog">Каталог материалов</Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-        <div className="flex flex-col justify-between mr-[15%]">
-          <div className="text-base font-medium flex flex-col gap-2">
-            <nav>
-              <ul>
-                <li>
-                  <Link href="/qa">Вопрос-ответ</Link>
-                </li>
-                <li>
-                  <Link href="/contacts">Контакты</Link>
-                </li>
-              </ul>
-            </nav>
+          <div className="min-[1920px]:[grid-area:email] flex flex-col gap-1">
+            <span className="text-marginalia text-gray">ЭЛЕКТРОННАЯ ПОЧТА</span>
+            <p className="text-h4 text-white">mbou_gimnaziya11@e-dag.ru</p>
           </div>
-          <p className={`text-sm font-normal`}>Designed by Freepik</p>
         </div>
-        <div className="flex flex-col justify-between">
-          <div className="text-base font-medium flex flex-col gap-2">
-            <nav>
-              <ul>
-                <li>
-                  <Link href="/terms">Пользовательское соглашение</Link>
-                </li>
-                <li>
-                  <Link href="/privacy">Политика конфиденциальности</Link>
-                </li>
-              </ul>
-            </nav>
-          </div>
-          <p
-            className={`${inter.className} text-xs font-medium flex items-center gap-2`}
-          >
-            Сделано в
-            <img
-              src="/footer-images/logo.svg"
-              alt="1t"
-              className="w-[28.8px] h-6 inline-block"
-            />
-            <img
-              src="/footer-images/union.svg"
-              alt="Союз рф"
-              className="w-[70px] h-[10.5px] inline-block"
-            />
-            | TEAMCODE
-          </p>
+
+        <div className="[grid-area:social] flex items-center gap-4">
+          <a href="#" className="size-[42px] rounded-lg bg-light-green flex items-center justify-center">
+            <img src="/icons/social/telegram.svg" alt="Telegram" className="size-[26px]" />
+          </a>
+          <a href="#" className="size-[42px] rounded-lg bg-light-green flex items-center justify-center">
+            <img src="/icons/social/max.svg" alt="MAX" className="size-[26px]" />
+          </a>
+          <a href="#" className="size-[42px] rounded-lg bg-light-green flex items-center justify-center">
+            <img src="/icons/social/vk.svg" alt="VK" className="size-[26px]" />
+          </a>
         </div>
-      </footer>
-    </div>
+
+        <Link href="/privacy" className="[grid-area:privacy] self-end text-input text-gray">
+          Политика конфиденциальности
+        </Link>
+
+        <p className="[grid-area:copyright] self-end text-input text-gray">
+          © 2026. МБОУ «Гимназия №11» г.&nbsp;Махачкала
+        </p>
+
+        <div className="[grid-area:madeby] self-end flex flex-row lg:flex-col items-center lg:items-start gap-2">
+          <img src="/footer-images/sot.svg" alt="Сот.рф" className="w-[42px] h-[25px]" />
+          <img src="/footer-images/made.svg" alt="Сделано в TEAMCODE" className="w-[271px] h-6" />
+        </div>
+      </div>
+    </footer>
   );
 }

@@ -1,5 +1,6 @@
 import { Montserrat } from 'next/font/google'
 import { Inter  } from 'next/font/google'
+import { Exo_2 } from 'next/font/google'
 
 export const montserrat = Montserrat({
     subsets: ['latin', 'cyrillic'],
@@ -16,4 +17,12 @@ export const inter = Inter({
     variable: '--font-inter',
     display: 'swap',
 
+})
+
+export const exo2 = Exo_2({
+    subsets: ['latin', 'cyrillic'],
+    weight: ['400', '500', '600', '700', '800'],
+    style: ['normal'],
+    variable: '--font-exo2',
+    display: 'swap',
 })

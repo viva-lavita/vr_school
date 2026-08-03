@@ -1,4 +1,44 @@
-.main {
-  background: #f6ffde;
-  height: 214px;
+.footerGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  height: 580px;
+  grid-template-areas:
+    "logo"
+    "contacts"
+    "social"
+    "privacy"
+    "copyright"
+    "madeby";
+}
+
+@media (min-width: 768px) {
+  .footerGrid {
+    height: 391px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "logo contacts"
+      "logo social"
+      "logo privacy"
+      "copyright madeby";
+  }
+}
+
+@media (min-width: 1024px) {
+  .footerGrid {
+    height: 274px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "logo contacts social"
+      "copyright privacy madeby";
+  }
+}
+
+@media (min-width: 1920px) {
+  .footerGrid {
+    height: 274px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-areas:
+      "logo phone email social"
+      "copyright . privacy madeby";
+  }
 }
