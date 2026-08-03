@@ -30,6 +30,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "sub_description",
+            "image",
             "is_need_vpn",
             "video",
             "in_progress",

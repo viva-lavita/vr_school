@@ -13,6 +13,7 @@ class Lesson(models.Model):
 
     name = models.CharField(max_length=255, verbose_name="Название урока")
     description = models.TextField(blank=True, verbose_name="Описание")
+    image = models.ImageField(upload_to="lessons", blank=True, verbose_name="Изображение")
     is_need_vpn = models.BooleanField(default=False, verbose_name="Требуется VPN")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="lessons", verbose_name="Преподаватель")
     video = models.URLField(blank=True, verbose_name="Ссылка на видео")
