@@ -75,8 +75,8 @@ def recalculate_missing_scores():
 
         total_points = q_points + cb_points + kv_points + essay_points
 
-        max_score = assignment.get_max_score()
-        grade = assignment.get_grade(total_points) if max_score > 0 else 0
+        max_score = assignment.class_assignment.get_max_score()
+        grade = assignment.class_assignment.get_grade(total_points) if max_score > 0 else 0
 
         assignment.score = grade
         if not assignment.completed_at:

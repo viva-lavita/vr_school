@@ -111,6 +111,16 @@ class TestCheckboxAnswerInline(admin.TabularInline):
     extra = 0
 
 
+class TestKeyValueAnswerInline(admin.TabularInline):
+    model = TestKeyValueAnswer
+    extra = 0
+
+
+class TestEssayAnswerInline(admin.TabularInline):
+    model = TestEssayAnswer
+    extra = 0
+
+
 @admin.register(LessonChildAssignment)
 class LessonChildAssignmentAdmin(admin.ModelAdmin):
     list_display = (
@@ -134,7 +144,7 @@ class LessonChildAssignmentAdmin(admin.ModelAdmin):
         "class_assignment__lesson__teacher__school__name",
     )
     show_facets = admin.ShowFacets.ALWAYS
-    inlines = [TestQuestionAnswerInline, TestCheckboxAnswerInline]
+    inlines = [TestQuestionAnswerInline, TestCheckboxAnswerInline, TestKeyValueAnswerInline, TestEssayAnswerInline]
 
     @admin.display(description="Дедлайн")
     def deadline(self, obj):
