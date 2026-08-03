@@ -311,27 +311,34 @@ EMAIL_ADMIN = EMAIL_HOST_USER
 ########################
 #  REDIS AND CELERY
 ########################
-REDIS_HOST = "127.0.0.1" if OPERATING_SYSTEM == "Windows" else "redis"
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:6379",
-        "OPTIONS": {
-            "db": "1",
-            "parser_class": "redis.connection.PythonParser",
-            "pool_class": "redis.BlockingConnectionPool",
+if os.getenv("DOCKER", default="True") == "True":
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://redis:6379",
+            "OPTIONS": {
+                "db": "1",
+                "parser_class": "redis.connection.PythonParser",
+                "pool_class": "redis.BlockingConnectionPool",
+            },
         },
-    },
-}
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
 
 REDIS_PORT = "6379"
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_BROKER_URL = f"redis://redis:{REDIS_PORT}/0"
 CELERY_BROKEN_TRANSPORT_OPTIONS = {"visibility_timeout": 3600}
 CELERY_TASK_ACKS_LATE = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://redis:{REDIS_PORT}/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
