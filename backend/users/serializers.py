@@ -134,6 +134,14 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
             raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
         return value
 
+    def validate_email(self, value: str):
+        """Валидация email на уникальность и на то, что он не заканчивается на .com."""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже зарегистрирован")
+        if value.endswith(".com"):
+            raise serializers.ValidationError("Email не должен заканчиваться на .com")
+        return value
+
 
 class ShortReadUserSerializer(serializers.ModelSerializer):
     child = serializers.PrimaryKeyRelatedField(read_only=True)
