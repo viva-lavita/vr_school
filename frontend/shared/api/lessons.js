@@ -11,15 +11,26 @@ function normalizeLesson(lesson) {
 }
 
 function normalizeTestQuestion(q, type) {
+  const pk = q.pk ?? q.id;
   return {
     ...q,
-    id: q.pk ?? q.id,
+    id: `${type}_${pk}`,
+    pk,
     type,
-    question: q.question,
+    question: q.question || q.description,
+    ...(q.description && !q.question ? { hint: q.description } : {}),
     ...(q.variants
       ? {
           options: q.variants.map((v) => v.answer),
           optionIds: q.variants.map((v) => v.pk ?? v.id),
+        }
+      : {}),
+    ...(q.keys
+      ? {
+          labels: q.keys.map((k) => k.key),
+          labelIds: q.keys.map((k) => k.pk ?? k.id),
+          tags: q.values.map((v) => v.value),
+          tagIds: q.values.map((v) => v.pk ?? v.id),
         }
       : {}),
   };
@@ -100,7 +111,7 @@ export async function getLesson(id) {
 
       let tests = [];
       try {
-        const testsList = await apiFetch(`tests/?search=${id}`);
+        const testsList = await apiFetch(`tests/`);
         if (testsList.results?.length) {
           const testPromises = testsList.results.map(async (t) => {
             try {

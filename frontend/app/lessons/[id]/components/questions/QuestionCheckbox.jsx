@@ -1,7 +1,7 @@
 "use client";
 
 export default function QuestionCheckbox({ question, answer, onChange, disabled }) {
-  const selected = answer || [];
+  const selected = Array.isArray(answer) ? answer : [];
 
   const toggle = (index) => {
     if (disabled) return;

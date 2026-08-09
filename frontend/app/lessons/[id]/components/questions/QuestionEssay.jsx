@@ -1,6 +1,7 @@
 "use client";
 
 export default function QuestionEssay({ question, answer, onChange, disabled }) {
+  const safeAnswer = typeof answer === "string" ? answer : "";
   return (
     <div className="flex flex-col gap-4">
       <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
@@ -9,7 +10,7 @@ export default function QuestionEssay({ question, answer, onChange, disabled }) 
       <div className="relative">
         <textarea
           maxLength={question.max_length}
-          value={answer || ""}
+          value={safeAnswer}
           onChange={(e) => !disabled && onChange(e.target.value)}
           disabled={disabled}
           placeholder="Напишите ответ"

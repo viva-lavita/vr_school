@@ -7,33 +7,44 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
   const questions = test.questions || [];
   const hasEssay = questions.some((q) => q.type === "essay");
 
-  const verifiedAnswers = Object.values(answers || {}).filter((a) => a?.is_correct !== undefined);
+  const answerValues = Object.values(answers || {});
+  const verifiedAnswers = answerValues.filter((a) => a?.is_correct !== undefined);
   const isVerified = verifiedAnswers.length > 0;
   const allCorrect = isVerified && verifiedAnswers.every((a) => a.is_correct === true);
   const anyIncorrect = verifiedAnswers.some((a) => a.is_correct === false);
+  const allEssaysVerified = !hasEssay || answerValues
+    .filter((a) => a?.is_verified !== undefined)
+    .every((a) => a.is_verified === true);
 
   let statusLabel, statusColor;
-  if (!isVerified && hasEssay) {
+  if (hasEssay && !allEssaysVerified) {
     statusLabel = "на проверке";
     statusColor = "#DB0000";
   } else if (isVerified && allCorrect) {
-    statusLabel = "новое";
+    statusLabel = "пройдено";
     statusColor = "#22C55E";
   } else if (isVerified && anyIncorrect) {
     statusLabel = "не пройдено";
     statusColor = "#DB0000";
+  } else if (!isVerified && allEssaysVerified) {
+    // Только эссе без других вопросов — проверено
+    statusLabel = "проверено";
+    statusColor = "#22C55E";
   } else {
     statusLabel = "на проверке";
     statusColor = "#DB0000";
   }
 
-  const score = isVerified ? (anyIncorrect ? 2 : 4) : null;
+  // Оценка: приоритет — score из API, затем расчёт
+  const score = test.score ?? (
+    (verifiedAnswers.length > 0 || allEssaysVerified) && (isVerified || allEssaysVerified)
+      ? (anyIncorrect ? 2 : 4)
+      : null
+  );
 
   return (
     <>
-      {/* Карточка задания */}
       <div className="w-full rounded-[20px] md:rounded-[32px] px-3 py-3 md:px-5 md:py-5" style={{ background: "#D4F9E1" }}>
-        {/* Шапка */}
         <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4">
           <button type="button" onClick={() => setExpanded(!expanded)}
             className="w-full flex items-start justify-between gap-3 md:gap-4 cursor-pointer">
@@ -58,7 +69,6 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
           </button>
         </div>
 
-        {/* Развёрнутый блок */}
         {expanded && (
           <div className="mt-2 md:mt-3 bg-white rounded-[18px] md:rounded-[32px] p-3 md:p-8">
             <p className="text-black mb-3 md:mb-4"
