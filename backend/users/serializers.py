@@ -4,9 +4,15 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from api.utils import is_russian
-from users.models import Child, Class, School
+from users.models import Child, Class, School, Subject
 
 User = get_user_model()
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ["pk", "name"]
 
 
 class SchoolSerializer(serializers.ModelSerializer):

@@ -5,8 +5,18 @@ from rest_framework import filters, permissions, serializers, status
 from rest_framework.response import Response
 
 from api.mixins import RetrieveListViewSet, RetrieveUpdateViewSet
-from users.models import Child, Class, School
-from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer
+from users.models import Child, Class, School, Subject
+from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer, SubjectSerializer
+
+
+class SubjectViewSet(RetrieveListViewSet):
+    """
+    Просмотр списка предметов.
+    """
+
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class SchoolViewSet(RetrieveListViewSet):

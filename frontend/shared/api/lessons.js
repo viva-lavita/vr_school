@@ -77,6 +77,14 @@ function normalizeTestDetail(detail) {
 }
 
 export async function getSubjects() {
+  try {
+    const data = await apiFetch("subject/");
+    if (data.results?.length > 0) {
+      return data.results.map((s) => ({ id: s.pk, name: s.name }));
+    }
+  } catch {
+    // fall through to mocks
+  }
   return subjects;
 }
 
