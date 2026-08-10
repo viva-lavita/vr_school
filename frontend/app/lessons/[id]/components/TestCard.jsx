@@ -12,6 +12,7 @@ import {
   submitAnswer, submitCheckboxAnswer, submitEssayAnswer, submitKeyValueAnswer,
   updateAnswer, updateCheckboxAnswer, updateEssayAnswer, updateKeyValueAnswer,
   getQuestionAnswer, getCheckboxAnswers, getEssayAnswers, getKeyValueAnswers,
+  getTestDetail,
 } from "@/shared/api/lessons";
 
 const STATUS_CONFIG = {
@@ -58,8 +59,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
   const [returnedWithProgress, setReturnedWithProgress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validationMsg, setValidationMsg] = useState(null);
+  const [testQuestions, setTestQuestions] = useState(test.questions || []);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const questions = test.questions || [];
+  const questions = testQuestions;
   const total = questions.length;
   const question = questions[currentQuestion];
   const userId = user?.pk;
@@ -99,6 +102,28 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     }
   }, [userId, test.id]);
 
+  // Загрузка test_detail при развёртывании (если вопросы не загружены)
+  useEffect(() => {
+    if (!expanded || testQuestions.length > 0) return;
+    let cancelled = false;
+
+    async function fetchDetail() {
+      setLoadingDetail(true);
+      try {
+        const detail = await getTestDetail(test.id);
+        if (!cancelled && detail.questions?.length) {
+          setTestQuestions(detail.questions);
+        }
+      } catch {
+        // ошибка загрузки
+      }
+      if (!cancelled) setLoadingDetail(false);
+    }
+
+    fetchDetail();
+    return () => { cancelled = true; };
+  }, [expanded, testQuestions.length, test.id]);
+
   // Загрузка существующего ответа с сервера при открытии вопроса
   useEffect(() => {
     if (!question || submittedAnswers[question.id] !== undefined) return;
@@ -109,14 +134,15 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         let existing = null;
         const qid = question.id;
         const pk = question.pk;
+        const apiType = question.apiType || question.type;
 
-        if (question.type === "checkbox") {
+        if (apiType === "checkbox") {
           const data = await getCheckboxAnswers(pk);
           if (data?.length > 0) existing = data[0];
-        } else if (question.type === "essay") {
+        } else if (apiType === "essay") {
           const data = await getEssayAnswers(pk);
           if (data?.length > 0) existing = data[0];
-        } else if (question.type === "matching") {
+        } else if (apiType === "matching") {
           const data = await getKeyValueAnswers(pk);
           if (data?.length > 0 && data[0]?.answers) existing = data[0];
         } else {
@@ -125,18 +151,18 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         }
 
         if (cancelled || !existing) return;
-        if (question.type !== "matching" && !existing.pk) return;
+        if (apiType !== "matching" && !existing.pk) return;
 
         setSubmittedAnswers((prev) => ({ ...prev, [qid]: existing }));
         setTouched(true);
 
-        if (question.type === "checkbox" && Array.isArray(existing.answers)) {
+        if (apiType === "checkbox" && Array.isArray(existing.answers)) {
           const indices = existing.answers.map((vid) => {
             const idx = question.optionIds?.indexOf(vid);
             return idx !== -1 ? idx : vid;
           });
           setAnswers((prev) => ({ ...prev, [qid]: indices }));
-        } else if (question.type === "matching" && Array.isArray(existing.answers)) {
+        } else if (apiType === "matching" && Array.isArray(existing.answers)) {
           const mapped = {};
           for (const item of existing.answers) {
             const labelIdx = question.labelIds?.indexOf(item.key) ?? -1;
@@ -219,22 +245,24 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     try {
       let res;
       const ans = answers[question.id];
+      const apiType = question.apiType || question.type;
 
-      if (question.type === "checkbox") {
-        const ids = Array.isArray(ans) ? ans.map((i) => question.optionIds?.[i] ?? i) : [];
+      if (apiType === "checkbox") {
+        // Radio (is_many_answers: false) отправляет один ответ как массив с одним элементом
+        let ids;
+        if (question.type === "radio") {
+          ids = ans !== undefined ? [question.optionIds?.[ans] ?? ans] : [];
+        } else {
+          ids = Array.isArray(ans) ? ans.map((i) => question.optionIds?.[i] ?? i) : [];
+        }
         res = hasServerPk
           ? await updateCheckboxAnswer(pk, ids)
           : await submitCheckboxAnswer(pk, ids);
-      } else if (question.type === "radio") {
-        const optionId = question.optionIds?.[ans] ?? ans;
-        res = hasServerPk
-          ? await updateAnswer(pk, String(optionId))
-          : await submitAnswer(pk, String(optionId));
-      } else if (question.type === "essay") {
+      } else if (apiType === "essay") {
         res = hasServerPk
           ? await updateEssayAnswer(pk, ans)
           : await submitEssayAnswer(pk, ans);
-      } else if (question.type === "matching") {
+      } else if (apiType === "matching") {
         const kvAnswers = Object.entries(ans || {}).map(([k, v]) => ({
           key: question.labelIds?.[Number(k)] ?? Number(k) + 1,
           values: Array.isArray(v)
@@ -267,9 +295,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           let res;
           const ans = answers[question.id];
           const pk = question.pk;
-          if (question.type === "essay") {
+          const apiType = question.apiType || question.type;
+          if (apiType === "essay") {
             res = await updateEssayAnswer(pk, ans);
-          } else if (question.type === "matching") {
+          } else if (apiType === "matching") {
             const kvAnswers = Object.entries(ans || {}).map(([k, v]) => ({
               key: question.labelIds?.[Number(k)] ?? Number(k) + 1,
               values: Array.isArray(v)
@@ -277,8 +306,13 @@ export default function TestCard({ test, user, onBackToMaterials }) {
                 : [question.tagIds?.[Number(v)] ?? Number(v) + 1],
             }));
             res = await updateKeyValueAnswer(pk, kvAnswers);
-          } else if (question.type === "checkbox") {
-            const ids = Array.isArray(ans) ? ans.map((i) => question.optionIds?.[i] ?? i) : [];
+          } else if (apiType === "checkbox") {
+            let ids;
+            if (question.type === "radio") {
+              ids = ans !== undefined ? [question.optionIds?.[ans] ?? ans] : [];
+            } else {
+              ids = Array.isArray(ans) ? ans.map((i) => question.optionIds?.[i] ?? i) : [];
+            }
             res = await updateCheckboxAnswer(pk, ids);
           } else {
             const answerValue = typeof ans === "string" ? ans : String(ans ?? "");
@@ -432,7 +466,15 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         </button>
       </div>
 
-      {expanded && question && (
+      {expanded && loadingDetail && (
+        <div className="mt-4 bg-white rounded-[26px] md:rounded-[32px] p-4 md:p-12 flex items-center justify-center">
+          <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "16px", color: "#343E3D" }}>
+            Загрузка теста...
+          </p>
+        </div>
+      )}
+
+      {expanded && !loadingDetail && question && (
         <div className="mt-4 bg-white rounded-[26px] md:rounded-[32px] p-4 md:p-12">
           <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase", color: "#222222", marginBottom: "8px" }}>
             Вопрос {currentQuestion + 1} из {total}

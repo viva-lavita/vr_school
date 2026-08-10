@@ -12,11 +12,16 @@ function normalizeLesson(lesson) {
 
 function normalizeTestQuestion(q, type) {
   const pk = q.pk ?? q.id;
+  // is_many_answers: true = checkbox, false = radio
+  const isRadio = q.is_many_answers === false;
+  const actualType = isRadio ? "radio" : type;
+
   return {
     ...q,
-    id: `${type}_${pk}`,
+    id: `${type}_${pk}`,  // id по оригинальному типу чтобы не было конфликтов
     pk,
-    type,
+    type: actualType,
+    apiType: type,  // оригинальный тип для API вызовов
     question: q.question || q.description,
     ...(q.description && !q.question ? { hint: q.description } : {}),
     ...(q.variants
@@ -29,8 +34,8 @@ function normalizeTestQuestion(q, type) {
       ? {
           labels: q.keys.map((k) => k.key),
           labelIds: q.keys.map((k) => k.pk ?? k.id),
-          tags: q.values.map((v) => v.value),
-          tagIds: q.values.map((v) => v.pk ?? v.id),
+          tags: (q.values || []).map((v) => v.value),
+          tagIds: (q.values || []).map((v) => v.pk ?? v.id),
         }
       : {}),
   };
@@ -111,17 +116,14 @@ export async function getLesson(id) {
 
       let tests = [];
       try {
-        const testsList = await apiFetch(`tests/`);
+        const testsList = await apiFetch(`tests/?lesson=${id}`);
         if (testsList.results?.length) {
-          const testPromises = testsList.results.map(async (t) => {
-            try {
-              const detail = await apiFetch(`tests/${t.pk ?? t.id}/test_detail/`);
-              return normalizeTestDetail({ ...t, ...detail });
-            } catch {
-              return { ...normalizeLesson(t), questions: [] };
-            }
-          });
-          tests = await Promise.all(testPromises);
+          tests = testsList.results.map((t) => ({
+            ...normalizeLesson(t),
+            name: t.name,
+            score: t.score ?? null,
+            questions: [], // test_detail загружается отдельно
+          }));
         }
       } catch {
         // no tests
@@ -138,6 +140,11 @@ export async function getLesson(id) {
   }
 
   return lessons.find((l) => l.id === Number(id)) ?? null;
+}
+
+export async function getTestDetail(testId) {
+  const detail = await apiFetch(`tests/${testId}/test_detail/`);
+  return normalizeTestDetail(detail);
 }
 
 // --- Test answers ---

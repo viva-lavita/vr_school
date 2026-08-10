@@ -1,4 +1,5 @@
 from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -67,8 +68,8 @@ class TestViewSet(RetrieveListViewSet):
 
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = [filters.SearchFilter]
-    search_fields = ("lesson__id",)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["lesson"]
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными классу ребенка.

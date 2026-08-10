@@ -56,3 +56,14 @@ def completed_at_update(sender, instance, created, **kwargs):
     if instance.score is not None and instance.completed_at is None:
         instance.completed_at = timezone.now()
         instance.save()
+
+
+@receiver(post_save, sender=Child)
+def create_assignments_for_new_child(sender, instance, **kwargs):
+    """Создание назначений уроков для ребёнка, добавленного в класс после назначения урока."""
+    if instance.class_number:
+        existing = LessonChildAssignment.objects.filter(child=instance).values_list("class_assignment", flat=True)
+        assignments = LessonClassAssignment.objects.filter(class_name=instance.class_number).exclude(pk__in=existing)
+        LessonChildAssignment.objects.bulk_create(
+            [LessonChildAssignment(child=instance, class_assignment=a) for a in assignments]
+        )

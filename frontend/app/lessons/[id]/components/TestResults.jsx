@@ -16,8 +16,12 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
     .filter((a) => a?.is_verified !== undefined)
     .every((a) => a.is_verified === true);
 
+  // Оценка: только из API (проставляется автоматом раз в 3 часа)
+  const score = test.score ?? null;
+
+  // Статус: если оценки нет — "на проверке", если есть — по результатам
   let statusLabel, statusColor;
-  if (hasEssay && !allEssaysVerified) {
+  if (score === null) {
     statusLabel = "на проверке";
     statusColor = "#DB0000";
   } else if (isVerified && allCorrect) {
@@ -26,21 +30,10 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
   } else if (isVerified && anyIncorrect) {
     statusLabel = "не пройдено";
     statusColor = "#DB0000";
-  } else if (!isVerified && allEssaysVerified) {
-    // Только эссе без других вопросов — проверено
+  } else {
     statusLabel = "проверено";
     statusColor = "#22C55E";
-  } else {
-    statusLabel = "на проверке";
-    statusColor = "#DB0000";
   }
-
-  // Оценка: приоритет — score из API, затем расчёт
-  const score = test.score ?? (
-    (verifiedAnswers.length > 0 || allEssaysVerified) && (isVerified || allEssaysVerified)
-      ? (anyIncorrect ? 2 : 4)
-      : null
-  );
 
   return (
     <>
@@ -101,14 +94,19 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
             )}
 
             {score === null && (
-              <div className="flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#DB0000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 6V12L16 14" stroke="#DB0000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "clamp(13px, 1vw + 6px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#DB0000" }}>
-                  На проверке
-                </span>
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative w-full max-w-[256px] md:max-w-[833px] h-[98px] md:h-[320px] rounded-xl md:rounded-[32px] overflow-hidden flex items-center justify-center">
+                  <img src="/images/test-not-completed.svg" alt="Тест на проверке" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#DB0000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 6V12L16 14" stroke="#DB0000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#DB0000" }}>
+                    На проверке
+                  </span>
+                </div>
               </div>
             )}
           </div>

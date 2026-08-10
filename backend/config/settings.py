@@ -348,7 +348,7 @@ if DEBUG:
         "debug_task": {"task": "api.tasks.debug_task", "schedule": crontab(minute="*/30"), "args": ()},
         "recalculate-missing-scores": {
             "task": "app.tasks.recalculate_missing_scores",
-            "schedule": crontab(minute="*/180"),  # каждые 180 минут = 3 часа
+            "schedule": timedelta(seconds=10),  # каждые 10 секунд для тестирования
         },
     }
 else:
