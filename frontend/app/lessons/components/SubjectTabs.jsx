@@ -82,8 +82,8 @@ function MobileDropdown({ subjects, active, onChange }) {
 export default function SubjectTabs({ subjects, active, onChange }) {
   return (
     <>
-      {/* Desktop: 4 in row */}
-      <div className="hidden lg:flex gap-4">
+      {/* Desktop: wrap to multiple rows */}
+      <div className="hidden lg:flex flex-wrap gap-4">
         {subjects.map((subject) => (
           <button
             key={subject.id}
