@@ -355,7 +355,7 @@ else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": crontab(minute="*/180"),  # каждые 180 минут = 3 часа
+            "schedule": timedelta(seconds=10),  # каждые 10 секунд для тестирования
         },
     }
 
