@@ -45,7 +45,7 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
               <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(13px, 1vw + 6px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#343E3D" }}>
                 Задание
               </p>
-              <p className="truncate" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "clamp(13px, 1vw + 6px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>
+              <p className="break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "clamp(13px, 1vw + 6px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>
                 Тема: «{test.name}»
               </p>
               <span className="inline-flex self-start px-2 py-0.5 md:px-3 md:py-1 rounded-lg md:rounded-xl border"
@@ -69,7 +69,7 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
               Результат проверки
             </p>
 
-            <p className="text-black mb-3 md:mb-4"
+            <p className="text-black mb-3 md:mb-4 break-words"
               style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "clamp(13px, 1vw + 6px, 16px)", lineHeight: "19px", textTransform: "uppercase" }}>
               Тема: «{test.name}»
             </p>

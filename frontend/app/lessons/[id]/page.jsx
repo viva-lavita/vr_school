@@ -86,7 +86,7 @@ export default function LessonPage() {
       </Link>
 
       {/* Title */}
-      <h1 className="text-black uppercase pb-3 lesson-title"
+      <h1 className="text-black uppercase pb-3 lesson-title break-words"
         style={{
           fontFamily: "var(--font-display)",
           fontWeight: 800,
@@ -97,7 +97,7 @@ export default function LessonPage() {
 
       {/* Short description */}
       <p
-        className="text-black pb-6"
+        className="text-black pb-6 break-words"
         style={{
           fontFamily: "var(--font-body)",
           fontWeight: 500,
@@ -150,7 +150,7 @@ export default function LessonPage() {
           {/* Detailed text */}
           {lesson.sub_description && (
             <p
-              className="text-black whitespace-pre-line"
+              className="text-black whitespace-pre-line break-words"
               style={{
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
