@@ -1,6 +1,6 @@
 import { getAccessToken } from "@/shared/api/tokens";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://цифроваяшкола-вр.рф/api/v1/";
+const API_URL = "https://цифроваяшкола-вр.рф/api/v1/";
 
 export class ApiError extends Error {
   constructor(status, data) {
