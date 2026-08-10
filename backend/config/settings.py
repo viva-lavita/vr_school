@@ -347,14 +347,14 @@ if DEBUG:
     CELERY_BEAT_SCHEDULE = {
         "debug_task": {"task": "api.tasks.debug_task", "schedule": crontab(minute="*/30"), "args": ()},
         "recalculate-missing-scores": {
-            "task": "app.tasks.recalculate_missing_scores",
+            "task": "lessons.tasks.recalculate_missing_scores",
             "schedule": timedelta(seconds=10),  # каждые 10 секунд для тестирования
         },
     }
 else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
-            "task": "app.tasks.recalculate_missing_scores",
+            "task": "lessons.tasks.recalculate_missing_scores",
             "schedule": crontab(minute="*/180"),  # каждые 180 минут = 3 часа
         },
     }
