@@ -68,7 +68,7 @@ class TestViewSet(RetrieveListViewSet):
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
-    search_fields = ("lesson",)
+    search_fields = ("lesson__id",)
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными классу ребенка.
