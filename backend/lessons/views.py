@@ -1,5 +1,4 @@
 from django.db import transaction
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -68,17 +67,18 @@ class TestViewSet(RetrieveListViewSet):
 
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["lesson"]
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными классу ребенка.
-        # TODO: добавить селект релейтед на модели элементов теста у test_detail
         child = Child.objects.get(parent=self.request.user)
         assignments = LessonClassAssignment.objects.filter(class_name=child.class_number).values_list(
             "lesson", flat=True
         )
-        return Test.objects.filter(lesson__in=assignments)
+        qs = Test.objects.filter(lesson__in=assignments)
+        lesson_id = self.request.query_params.get("lesson")
+        if lesson_id:
+            qs = qs.filter(lesson_id=lesson_id)
+        return qs
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
