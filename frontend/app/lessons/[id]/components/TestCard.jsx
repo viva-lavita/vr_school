@@ -479,7 +479,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase", color: "#222222", marginBottom: "8px" }}>
             Вопрос {currentQuestion + 1} из {total}
           </p>
-          <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "20px", lineHeight: "140%", color: "#222222", marginBottom: "16px" }}>
+          <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "20px", lineHeight: "140%", color: "#222222", marginBottom: "16px", wordBreak: "break-word" }}>
             {question.question}
           </p>
           <div className="w-full border-t border-[#D4F9E1] mb-5" />
