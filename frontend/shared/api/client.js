@@ -1,6 +1,9 @@
 import { getAccessToken } from "@/shared/api/tokens";
 
+// Базовый URL API (захардкожен, чтобы не зависеть от переменных окружения)
 const API_URL = "https://цифроваяшкола-вр.рф/api/v1/";
+// Старый IP, который может быть зашит в некоторых вызовах
+const OLD_API_BASE = "http://212.8.229.10/api/v1/";
 
 export class ApiError extends Error {
   constructor(status, data) {
@@ -11,6 +14,15 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch(path, { method = "GET", body, headers, ...rest } = {}) {
+  // 🔥 Нормализация path: если это полный URL со старым IP – заменяем на правильный
+  if (typeof path === 'string' && path.startsWith(OLD_API_BASE)) {
+    path = path.replace(OLD_API_BASE, API_URL);
+  }
+  // Дополнительная защита на случай, если IP встречается в середине строки
+  if (typeof path === 'string' && path.includes('212.8.229.10')) {
+    path = path.replace(/http:\/\/212\.8\.229\.10\/api\/v1\//g, API_URL);
+  }
+
   const accessToken = getAccessToken();
 
   const response = await fetch(`${API_URL}${path}`, {
