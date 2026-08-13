@@ -55,7 +55,7 @@ export default function Input({
     }
   };
 
-  const fieldClassName = `w-full text-input text-black bg-white rounded-xl px-4 py-3 ${
+  const fieldClassName = `w-full min-w-0 text-input text-black bg-white rounded-xl px-4 py-3 ${
     hasRightIcon ? "pr-11" : ""
   } ${error ? "border-2 border-red" : ""} ${className}`;
 

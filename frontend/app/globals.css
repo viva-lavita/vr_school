@@ -58,6 +58,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"] {
   -moz-appearance: textfield;
   appearance: textfield;
+  min-width: 0;
 }
 
 .hide-scrollbar {
