@@ -4,6 +4,7 @@ from django.db import transaction
 from djoser.views import UserViewSet as DjoserUserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import filters, permissions, serializers, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.mixins import RetrieveListViewSet, RetrieveUpdateViewSet
