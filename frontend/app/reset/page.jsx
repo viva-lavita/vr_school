@@ -34,6 +34,7 @@ export default function ResetPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,13 +55,19 @@ export default function ResetPage() {
       return;
     }
     setSaving(true);
+    setError("");
     try {
       await requestPasswordReset({ email: formData.email.trim() });
-    } catch (err) {
-      console.error(err);
-    } finally {
       setFormData(initialFormData);
       setSuccess(true);
+    } catch (err) {
+      if (err.status >= 500) {
+        setError("Сервер временно недоступен. Попробуйте позже.");
+      } else {
+        setFormData(initialFormData);
+        setSuccess(true);
+      }
+    } finally {
       setSaving(false);
     }
   };
@@ -77,8 +84,12 @@ export default function ResetPage() {
             <>
           <p className="text-h3 text-black uppercase pb-4 text-center">Восстановление пароля</p>
           <p className="text-2 text-black text-center pb-7">
-            Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
+            Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
           </p>
+
+          {error && (
+            <p className="text-input text-red text-center pb-4">{error}</p>
+          )}
 
           <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
             <Input

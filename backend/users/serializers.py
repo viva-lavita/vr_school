@@ -53,8 +53,9 @@ class ChildSerializer(serializers.ModelSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance and self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
 
@@ -89,8 +90,9 @@ class UserSerializer(DjoserUserSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
 
@@ -136,8 +138,9 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance and self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
     def validate_email(self, value: str):

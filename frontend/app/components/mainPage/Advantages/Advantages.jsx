@@ -10,7 +10,7 @@ export default function Advantages() {
           <p className="text-h2 text-black">Почему мы используем <span className="text-green">ВР на уроках</span></p>
         </div>
 
-        <div className="grid lg:grid-cols-2 min-[1920px]:grid-cols-3 gap-[30px]">
+        <div className="grid lg:grid-cols-3 min-[1920px]:grid-cols-3 gap-[30px]">
           <div className="h-[360px] bg-[linear-gradient(302.96deg,#151515_0%,#3E3E3E_49.45%,#7B7B7B_123.92%)] p-[28px] rounded-4xl flex flex-col justify-between">
             <Image src="/icons/vr/vr-1.svg" alt="" width={44} height={44} />
             <div>

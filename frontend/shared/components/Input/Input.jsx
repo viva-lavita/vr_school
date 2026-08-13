@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function Input({
@@ -20,54 +20,86 @@ export default function Input({
 }) {
   const inputRef = useRef(null);
   const [inputType, setInputType] = useState(type);
-  const [hasValue, setHasValue] = useState(Boolean(value ?? defaultValue));
+  
+  const [hasText, setHasText] = useState(Boolean(value || defaultValue));
+
+  useEffect(() => {
+    setHasText(Boolean(value));
+  }, [value]);
 
   const isPassword = type === "password";
   const isDate = type === "date";
-  const showClear = clearable && !isPassword && hasValue;
+  
+  const showClear = clearable && !isPassword && hasText;
   const showEditIcon = editable && !isPassword && !showClear;
   const hasRightIcon = isPassword || showClear || showEditIcon;
 
   const handleChange = (e) => {
-    setHasValue(e.target.value.length > 0);
-    onChange?.(e);
+    setHasText(e.target.value.length > 0);
+    onChange?.(e); 
   };
 
   const handleClear = () => {
     if (inputRef.current) {
-      inputRef.current.value = "";
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value"
+      ).set;
+      nativeInputValueSetter.call(inputRef.current, "");
+
+      const event = new Event("input", { bubbles: true });
+      inputRef.current.dispatchEvent(event);
+      
+      setHasText(false);
       inputRef.current.focus();
     }
-    setHasValue(false);
-    onChange?.({ target: { name, value: "" } });
   };
 
-  const fieldClassName = `w-full text-input text-black  bg-white rounded-xl px-4 py-3 ${hasRightIcon ? "pr-11" : ""} ${error ? "border-2 border-red" : ""} ${className}`;
+  const fieldClassName = `w-full text-input text-black bg-white rounded-xl px-4 py-3 ${
+    hasRightIcon ? "pr-11" : ""
+  } ${error ? "border-2 border-red" : ""} ${className}`;
 
   return (
     <div className="flex h-full flex-col justify-end">
       {error && errorMessage && <p className="mb-1 text-input text-red">{errorMessage}</p>}
 
-      <div className="relative">
+      <div className="relative group">
         <input
           ref={inputRef}
           name={name}
           type={inputType}
-          placeholder=" "
+          placeholder=" " 
           required={required}
           value={value}
           defaultValue={defaultValue}
           onChange={handleChange}
-          className={`${fieldClassName} ${isDate && !hasValue ? "date-empty" : ""}`}
+          className={`peer ${fieldClassName} ${
+            isDate 
+              ? `text-black 
+                 [&:not(:focus)::before]:absolute 
+                 [&:not(:focus)::before]:left-4 
+                 [&:not(:focus)::before]:top-1/2 
+                 [&:not(:focus)::before]:-translate-y-1/2 
+                 [&:not(:focus)::before]:text-black 
+                 ${required 
+                   ? "[&:not(:focus)::before]:content-['Дата_рождения_*']" 
+                   : "[&:not(:focus)::before]:content-['Дата_рождения']"
+                 }
+                 [&:not(:focus)]:text-transparent
+                 focus:text-black` 
+              : ""
+          }`}
           {...props}
         />
 
-        <span
-          className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input text-black  ${hasValue ? "hidden" : "block"}`}
-        >
-          {placeholder}
-          {required && <span className="text-red">*</span>}
-        </span>
+        {!isDate && (
+          <span
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input text-black transition-opacity duration-150 peer-focus:opacity-0 peer-[:not(:placeholder-shown)]:opacity-0"
+          >
+            {placeholder}
+            {required && <span className="text-red ml-1">*</span>}
+          </span>
+        )}
 
         {isPassword && (
           <button

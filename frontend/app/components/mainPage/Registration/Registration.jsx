@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Button from "@/shared/components/Button/Button";
+import { useUser } from "@/shared/context/UserContext";
 
 export default function Registration() {
+  const { user } = useUser();
+
   return (
     <div className="relative mx-[calc(50%-50vw)] overflow-hidden h-[360px] md:h-[560px] lg:h-[600px] min-[1920px]:785px">
       <Image
@@ -20,7 +25,7 @@ export default function Registration() {
 
           <Button
             label="Зарегестрироваться"
-            href="/register"
+            href={user ? "/lessons" : "/register"}
             width="314px"
             labelClassName="text-button"
             icon={<Image src="/icons/vr/vr-glass.svg" alt="" width={24} height={24} />}
