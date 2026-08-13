@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
       <body>
         <Suspense fallback={<div>Loading...</div>}>
           <UserProvider>
-            <div className="flex flex-col min-h-screen overflow-x-hidden">
+            <div className="flex flex-col min-h-screen">
               <Header />
               <main className="page-container flex-1">{children}</main>
               <Footer />
