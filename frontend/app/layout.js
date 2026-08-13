@@ -18,12 +18,12 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="ru"
-      className={`${montserrat.variable} ${inter.variable} ${exo2.variable} scroll-smooth`}
+      className={`${montserrat.variable} ${inter.variable} ${exo2.variable} scroll-smooth overflow-x-hidden`}
     >
       <body>
         <Suspense fallback={<div>Loading...</div>}>
           <UserProvider>
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col min-h-screen overflow-x-hidden">
               <Header />
               <main className="page-container flex-1">{children}</main>
               <Footer />

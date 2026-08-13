@@ -31,6 +31,8 @@
 
 html {
   height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -39,6 +41,7 @@ body {
   font-family: var(--font-sans);
   height: 100%;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 input[type="date"].date-empty::-webkit-datetime-edit-day-field,

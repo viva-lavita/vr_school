@@ -204,7 +204,7 @@ export default function ProfileInformationPage() {
 
   return (
     <>
-    <div className="flex items-center justify-center flex-col">
+    <div className="flex items-center justify-center flex-col overflow-x-hidden">
       <div className="w-full flex flex-col-reverse md:flex-col gap-[15px] md:gap-[22px] py-7 md:pt-15 md:pb-4">
         <p className="text-h3 text-black uppercase text-center md:text-left">Мои данные</p>
         <button
