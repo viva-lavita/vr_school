@@ -1,7 +1,7 @@
 .footerGrid {
   display: grid;
   grid-template-columns: 1fr;
-  height: 580px;
+  height: 605px;
   grid-template-areas:
     "logo"
     "contacts"
@@ -13,7 +13,7 @@
 
 @media (min-width: 768px) {
   .footerGrid {
-    height: 391px;
+    height: 416px;
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "logo contacts"
@@ -25,7 +25,7 @@
 
 @media (min-width: 1024px) {
   .footerGrid {
-    height: 274px;
+    height: 299px;
     grid-template-columns: repeat(3, 1fr);
     grid-template-areas:
       "logo contacts social"
@@ -35,7 +35,7 @@
 
 @media (min-width: 1920px) {
   .footerGrid {
-    height: 274px;
+    height: 299px;
     grid-template-columns: repeat(4, 1fr);
     grid-template-areas:
       "logo phone email social"

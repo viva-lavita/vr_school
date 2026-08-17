@@ -34,9 +34,14 @@ export default function Footer() {
           </a>
         </div>
 
-        <Link href="/privacy" className="[grid-area:privacy] self-end text-input text-gray">
-          Политика конфиденциальности
-        </Link>
+        <div className="[grid-area:privacy] self-end flex flex-col gap-1">
+          <Link href="/privacy" className="text-input text-gray">
+            Политика конфиденциальности
+          </Link>
+          <Link href="/terms" className="text-input text-gray">
+            Пользовательское соглашение
+          </Link>
+        </div>
 
         <p className="[grid-area:copyright] self-end text-input text-gray">
           © 2026. МБОУ «Гимназия №11» г.&nbsp;Махачкала

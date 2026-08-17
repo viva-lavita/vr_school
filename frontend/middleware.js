@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/privacy"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/privacy", "/terms"];
 
 function createMockJwt() {
   const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));

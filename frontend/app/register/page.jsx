@@ -425,7 +425,7 @@ export default function RegisterPage() {
               className="mt-0.5 size-4 shrink-0 appearance-none rounded-[2px] bg-white border-1 border-gray checked:bg-[url('/icons/ui/check.svg')] checked:bg-no-repeat checked:bg-center cursor-pointer"
             />
             <span className="text-black text-input">
-              Ознакомлен с <span className="underline">Правилами</span> использования сайта.
+              Ознакомлен с <Link href="/terms" className="underline">Правилами</Link> использования сайта.
             </span>
           </label>
           <label className="flex items-start gap-3 cursor-pointer pt-3 pb-5">
@@ -437,7 +437,7 @@ export default function RegisterPage() {
               className="mt-0.5 size-4 shrink-0 appearance-none rounded-[2px] bg-white border-1 border-gray checked:bg-[url('/icons/ui/check.svg')] checked:bg-no-repeat checked:bg-center cursor-pointer"
             />
             <span className="text-black text-input">
-              Согласне с <span className="underline">Положение обработки</span> и хранения персональных данных(сюда также включены нормы, связанные с обработкой и хранением несовершенолетних).
+              Согласие с <Link href="/privacy" className="underline">Положением обработки</Link> и хранения персональных данных (сюда также включены нормы, связанные с обработкой и хранением несовершеннолетних).
             </span>
           </label>
 
