@@ -315,7 +315,7 @@ class TestEssayElement(models.Model):
     """Элемент теста: эссе. Проверка преподавателем."""
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays", verbose_name="Тест")
-    question = models.CharField(max_length=1000, verbose_name="Вопрос")
+    question = models.CharField(max_length=500, verbose_name="Вопрос")
     points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -365,3 +365,55 @@ class TestEssayAnswer(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class TestEssayAiElement(models.Model):
+    """Тип Эссе с проверкой ии."""
+
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays_ai", verbose_name="Тест")
+    question = models.CharField(max_length=500, verbose_name="Вопрос")
+    points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
+    mention_things = models.CharField(max_length=500, verbose_name="Что должен упомянуть(влияет на оценку)")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Элемент теста: эссе с ИИ"
+        verbose_name_plural = "Элементы теста: эссе с ИИ"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.test.name[:20]} - {self.question[:20]}"
+
+
+class TestEssayAiAnswer(models.Model):
+    """Ответ ученика на эссе с ИИ."""
+
+    question = models.ForeignKey(
+        TestEssayAiElement, related_name="answers", on_delete=models.CASCADE, verbose_name="Вопрос"
+    )
+    assignment = models.ForeignKey(
+        LessonChildAssignment, related_name="answersEssayAi", on_delete=models.CASCADE, verbose_name="Назначение урока"
+    )
+    points = models.SmallIntegerField(default=0, verbose_name="Полученные баллы")
+    answer = models.TextField(verbose_name="Ответ")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Ответ ученика: эссе с ИИ"
+        verbose_name_plural = "Ответы учеников: эссе с ИИ"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["question", "assignment"], name="unique_essay_ai_answer")]
+
+    def __str__(self):
+        return f"{self.question.question[:20]} - {self.answer[:20]}"
+
+
+# Пользователь (через Next.js фронтенд) отправляет эссе на Django API.
+# Django сохраняет черновик ответа в TestEssayAiAnswer со статусом is_verified=False, points=0.
+# Django запускает Celery‑задачу evaluate_essay_with_ai, передавая ID ответа.
+# Celery‑воркер делает запрос к OpenRouter, формирует промпт с учётом класса и обязательных достопримечательностей.
+# OpenRouter возвращает ответ; парсим из него одну цифру (оценка 0–100 или 2–5).
+# Обновляем запись в БД: points и, при необходимости, is_verified.
+# Если нужно, отправляем уведомление (email/webhook/socket) о готовности оценки.

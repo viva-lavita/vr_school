@@ -12,6 +12,8 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAiAnswer,
+    TestEssayAiElement,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -76,13 +78,24 @@ class TestEssayElementInline(nested_admin.NestedTabularInline):
     extra = 0
 
 
+class TestEssayAiElementInline(nested_admin.NestedTabularInline):
+    model = TestEssayAiElement
+    extra = 0
+
+
 @admin.register(Test)
 class TestAdmin(nested_admin.NestedModelAdmin):  # Используем NestedModelAdmin
     list_display = ("id", "short_lesson", "short_name", "created_at", "updated_at")
     search_fields = ("lesson__name", "name", "lesson__teacher__last_name")
     show_facets = admin.ShowFacets.ALWAYS
     date_hierarchy = "created_at"
-    inlines = [TestQuestionElementInline, TestCheckboxElementInline, TestKeyValueElementInline, TestEssayElementInline]
+    inlines = [
+        TestQuestionElementInline,
+        TestCheckboxElementInline,
+        TestKeyValueElementInline,
+        TestEssayElementInline,
+        TestEssayAiElementInline,
+    ]
 
     @admin.display(description="Название")
     def short_name(self, obj):
@@ -298,6 +311,33 @@ class TestEssayAnswerAdmin(admin.ModelAdmin):
     search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
     date_hierarchy = "created_at"
     list_filter = ("is_verified",)
+    show_facets = admin.ShowFacets.ALWAYS
+
+    @admin.display(description="Ребенок")
+    def child(self, obj):
+        return obj.assignment.child
+
+
+@admin.register(TestEssayAiElement)
+class TestEssayAiElementAdmin(admin.ModelAdmin):
+    list_display = ("id", "short_test", "short_question", "points", "created_at", "updated_at")
+    search_fields = ("test__name",)
+    date_hierarchy = "created_at"
+
+    @admin.display(description="Тест")
+    def short_test(self, obj):
+        return obj.test.name[:20] + "..."
+
+    @admin.display(description="Вопрос")
+    def short_question(self, obj):
+        return obj.question[:20] + "..."
+
+
+@admin.register(TestEssayAiAnswer)
+class TestEssayAiAnswerAdmin(admin.ModelAdmin):
+    list_display = ("id", "child", "question", "points", "created_at", "updated_at")
+    search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
+    date_hierarchy = "created_at"
     show_facets = admin.ShowFacets.ALWAYS
 
     @admin.display(description="Ребенок")

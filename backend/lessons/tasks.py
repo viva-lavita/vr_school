@@ -1,6 +1,7 @@
 import logging
 
 from celery import shared_task
+from django.db import transaction
 from django.db.models import Sum
 
 from lessons.models import (
@@ -14,6 +15,7 @@ from lessons.models import (
     TestQuestionAnswer,
     TestQuestionElement,
 )
+from lessons.utils import evaluate_essay
 
 logger = logging.getLogger("tasks")
 
@@ -86,3 +88,38 @@ def recalculate_missing_scores():
         count_processed += 1
 
     logger.info(f"Finished score recalculation run. Processed {count_processed} assignments.")
+
+
+@shared_task(bind=True, max_retries=3)
+def evaluate_essay_with_ai(self, answer_id: int):
+    """Проверка эссе с помощью AI."""
+    from .models import TestEssayAiAnswer
+
+    try:
+        answer = TestEssayAiAnswer.objects.select_related(
+            "question",
+            "assignment__child__class_number",  # ForeignKey(Class)
+        ).get(pk=answer_id)
+    except TestEssayAiAnswer.DoesNotExist:
+        return
+
+    question = answer.question
+    child = answer.assignment.child
+    class_obj = child.class_number  # это объект Class
+
+    class_label = getattr(class_obj, "name", str(class_obj))  # например, "5А"
+
+    essay_text = answer.answer
+    mention_things = question.mention_things
+    max_points = question.points
+
+    try:
+        points = evaluate_essay(essay_text, class_label, mention_things, max_points)
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60)
+
+    with transaction.atomic():
+        answer.points = points
+        answer.save(update_fields=["points", "updated_at"])
+
+    return {"answer_id": answer_id, "points": points}
