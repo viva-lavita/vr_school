@@ -82,14 +82,14 @@ function MobileDropdown({ subjects, active, onChange }) {
 export default function SubjectTabs({ subjects, active, onChange }) {
   return (
     <>
-      {/* Desktop: 4 in row */}
-      <div className="hidden lg:flex gap-4">
+      {/* Desktop: wrap to multiple rows */}
+      <div className="hidden lg:flex flex-wrap gap-4 overflow-x-hidden">
         {subjects.map((subject) => (
           <button
             key={subject.id}
             type="button"
             onClick={() => onChange(subject.id)}
-            className="flex-1 flex justify-center items-center px-6 py-3 rounded-full border-2 border-[#22C55E] cursor-pointer transition-colors"
+            className="flex-shrink-0 flex justify-center items-center px-6 py-3 rounded-full border-2 border-[#22C55E] cursor-pointer transition-colors"
             style={{
               fontFamily: "var(--font-body)",
               fontWeight: 700,

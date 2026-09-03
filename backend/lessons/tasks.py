@@ -8,6 +8,7 @@ from lessons.models import (
     LessonChildAssignment,
     TestCheckboxAnswer,
     TestCheckboxElement,
+    TestEssayAiAnswer,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -93,8 +94,6 @@ def recalculate_missing_scores():
 @shared_task(bind=True, max_retries=3)
 def evaluate_essay_with_ai(self, answer_id: int):
     """Проверка эссе с помощью AI."""
-    from .models import TestEssayAiAnswer
-
     try:
         answer = TestEssayAiAnswer.objects.select_related(
             "question",
@@ -116,6 +115,7 @@ def evaluate_essay_with_ai(self, answer_id: int):
     try:
         points = evaluate_essay(essay_text, class_label, mention_things, max_points)
     except Exception as exc:
+        logger.exception("Ошибка при оценке эссе answer_id=%s", answer_id)
         raise self.retry(exc=exc, countdown=60)
 
     with transaction.atomic():

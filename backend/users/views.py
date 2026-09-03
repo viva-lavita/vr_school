@@ -1,12 +1,27 @@
+import logging
+
 from django.db import transaction
 from djoser.views import UserViewSet as DjoserUserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import filters, permissions, serializers, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.mixins import RetrieveListViewSet, RetrieveUpdateViewSet
-from users.models import Child, Class, School
-from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer
+from users.models import Child, Class, School, Subject
+from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer, SubjectSerializer
+
+logger = logging.getLogger("django.request")
+
+
+class SubjectViewSet(RetrieveListViewSet):
+    """
+    Просмотр списка предметов.
+    """
+
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class SchoolViewSet(RetrieveListViewSet):
@@ -60,6 +75,17 @@ class UserViewSet(DjoserUserViewSet):
         if self.action == "me":
             self.permission_classes = (permissions.IsAuthenticated,)
         return super().get_permissions()
+
+    @action(["post"], detail=False)
+    def reset_password(self, request, *args, **kwargs):
+        try:
+            return super().reset_password(request, *args, **kwargs)
+        except Exception as e:
+            logger.error("Password reset email send failed: %s", e)
+            return Response(
+                {"detail": "Не удалось отправить письмо. Попробуйте позже."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def retrieve(self, request, *args, **kwargs):
         """

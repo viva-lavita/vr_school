@@ -37,6 +37,7 @@ export default function ChangePasswordPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogout = () => {
     logoutUser();
@@ -63,13 +64,19 @@ export default function ChangePasswordPage() {
       return;
     }
     setSaving(true);
+    setError("");
     try {
       await requestPasswordReset({ email: formData.email.trim() });
-    } catch (err) {
-      console.error(err);
-    } finally {
       setFormData(initialFormData);
       setSuccess(true);
+    } catch (err) {
+      if (err.status >= 500) {
+        setError("Сервер временно недоступен. Попробуйте позже.");
+      } else {
+        setFormData(initialFormData);
+        setSuccess(true);
+      }
+    } finally {
       setSaving(false);
     }
   };
@@ -96,8 +103,12 @@ export default function ChangePasswordPage() {
           ) : (
           <form className="flex flex-col gap-3 mx-auto md:w-[541px] lg:w-[622px] xl:w-[686px]" onSubmit={handleSubmit} noValidate>
             <p className="text-2 text-black pb-5 text-center">
-              Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
+              Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
             </p>
+
+            {error && (
+              <p className="text-input text-red text-center pb-3">{error}</p>
+            )}
 
             <Input
               name="email"
@@ -127,7 +138,7 @@ export default function ChangePasswordPage() {
 
       <Popup open={success} onClose={() => setSuccess(false)}>
         <p className="text-h4 text-black text-center">Ссылка на восстановление отправлена</p>
-        <p className="text-2 text-black text-center pt-8">Если указанный email зарегистрирован в системе, мы отправим на него письмо с инструкцией</p>
+        <p className="text-2 text-black text-center pt-8">Если указанный email зарегистрирован в системе, мы отправим на него письмо с инструкцией</p>
       </Popup>
     </>
   );

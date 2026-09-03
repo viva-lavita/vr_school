@@ -24,6 +24,8 @@ export default function LessonCard({ lesson, number }) {
     fontWeight: 500,
     fontSize: "16px",
     lineHeight: "140%",
+    wordBreak: "break-word",   
+    overflowWrap: "break-word", 
   };
 
   const badgeStyle = {

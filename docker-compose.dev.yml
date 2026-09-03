@@ -25,6 +25,9 @@ services:
       db:
         condition: service_healthy
         restart: true
+      redis:
+        condition: service_healthy
+        restart: true
     env_file:
       - .env
     networks:
@@ -72,6 +75,7 @@ services:
 
   redis:
     image: redis:alpine
+    restart: always
     networks:
       - default
     healthcheck:

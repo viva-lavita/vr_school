@@ -393,7 +393,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           <div className="bg-white rounded-xl p-4 md:p-[16px] mb-4">
             <div className="flex flex-col gap-[15px] text-left">
               <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#343E3D" }}>Задание</p>
-              <p style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
+              <p className="break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
               <span className={`inline-flex self-start px-3 py-1 rounded-xl border ${status.borderColor} ${status.textColor}`}
                 style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "140%" }}>{status.label}</span>
             </div>
@@ -427,7 +427,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         <div className="bg-white rounded-xl p-4 md:p-[16px] mb-4">
           <div className="flex flex-col gap-[15px] text-left">
             <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#343E3D" }}>Задание</p>
-            <p style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
+            <p className="break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
             <span className={`inline-flex self-start px-3 py-1 rounded-xl border ${status.borderColor} ${status.textColor}`}
               style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "140%" }}>{status.label}</span>
           </div>
@@ -451,10 +451,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     <div className="w-full rounded-[32px] px-4 py-4 md:px-[30px] md:py-[30px]" style={{ background: "#D4F9E1" }}>
       <div className="bg-white rounded-xl p-4 md:p-[16px]">
         <button type="button" onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-start justify-between gap-4 cursor-pointer">
-          <div className="flex flex-col gap-[15px] text-left">
+          className="w-full flex items-start justify-between gap-4 cursor-pointer overflow-hidden">
+          <div className="flex flex-col gap-[15px] text-left min-w-0">
             <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#343E3D" }}>Задание</p>
-            <p style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
+            <p className="break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222" }}>Тема: «{test.name}»</p>
             <span className={`inline-flex self-start px-3 py-1 rounded-xl border ${status.borderColor} ${status.textColor}`}
               style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "140%" }}>{status.label}</span>
           </div>
@@ -479,7 +479,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase", color: "#222222", marginBottom: "8px" }}>
             Вопрос {currentQuestion + 1} из {total}
           </p>
-          <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "20px", lineHeight: "140%", color: "#222222", marginBottom: "16px" }}>
+          <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "20px", lineHeight: "140%", color: "#222222", marginBottom: "16px", wordBreak: "break-word" }}>
             {question.question}
           </p>
           <div className="w-full border-t border-[#D4F9E1] mb-5" />

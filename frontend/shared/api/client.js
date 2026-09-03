@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/shared/api/tokens";
+import { getAccessToken, clearTokens } from "@/shared/api/tokens";
 
 const API_URL = "https://цифроваяшкола-вр.рф/api/v1/";
 
@@ -10,8 +10,8 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch(path, { method = "GET", body, headers, ...rest } = {}) {
-  const accessToken = getAccessToken();
+export async function apiFetch(path, { method = "GET", body, headers, auth = true, ...rest } = {}) {
+  const accessToken = auth ? getAccessToken() : null;
 
   const response = await fetch(`${API_URL}${path}`, {
     method,
@@ -28,6 +28,9 @@ export async function apiFetch(path, { method = "GET", body, headers, ...rest } 
   const data = contentType.includes("application/json") ? await response.json() : null;
 
   if (!response.ok) {
+    if (response.status === 401 && accessToken) {
+      clearTokens();
+    }
     throw new ApiError(response.status, data);
   }
 

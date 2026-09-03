@@ -26,7 +26,7 @@ export default function QuestionEssay({ question, answer, onChange, disabled }) 
           }}
         />
         <span className="absolute bottom-3 right-4 text-input text-[#343E3D]">
-          до {question.max_length} символов
+          до 5000 символов
         </span>
       </div>
     </div>

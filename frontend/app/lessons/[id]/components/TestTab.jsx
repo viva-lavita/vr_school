@@ -27,7 +27,7 @@ export default function TestTab({ lesson, user, onBackToMaterials }) {
             ! Комментарий к проверочному заданию:
           </p>
           <p
-            className="text-black whitespace-pre-line"
+            className="text-black whitespace-pre-line break-words"
             style={{
               fontFamily: "var(--font-body)",
               fontWeight: 500,

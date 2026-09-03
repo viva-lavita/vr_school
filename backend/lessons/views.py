@@ -77,12 +77,15 @@ class TestViewSet(RetrieveListViewSet):
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными классу ребенка.
-        # TODO: добавить селект релейтед на модели элементов теста у test_detail
         child = Child.objects.get(parent=self.request.user)
         assignments = LessonClassAssignment.objects.filter(class_name=child.class_number).values_list(
             "lesson", flat=True
         )
-        return Test.objects.filter(lesson__in=assignments)
+        qs = Test.objects.filter(lesson__in=assignments)
+        lesson_id = self.request.query_params.get("lesson")
+        if lesson_id:
+            qs = qs.filter(lesson_id=lesson_id)
+        return qs
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -511,7 +514,11 @@ class TestEssayAnswerAIViewSet(CreateListViewSet):
             )
 
         # Запускаем асинхронную проверку
+        # TODO: добавить таску которая будет подхватывать те задания, которые не удалось проверить
+        # try:
         evaluate_essay_with_ai.delay(new_answer.id)
+        # except Exception as e:
+        #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(TestEssayAnswerAISerializer(new_answer).data, status=status.HTTP_201_CREATED)
 

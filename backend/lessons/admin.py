@@ -307,7 +307,7 @@ class TestEssayElementAdmin(admin.ModelAdmin):
 
 @admin.register(TestEssayAnswer)
 class TestEssayAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", "child", "is_verified", "question", "points", "created_at", "updated_at")
+    list_display = ("id", "child", "class_number", "is_verified", "question", "points", "created_at", "updated_at")
     search_fields = ("question__test__name", "question__question", "assignment__child__last_name")
     date_hierarchy = "created_at"
     list_filter = ("is_verified",)
@@ -316,6 +316,10 @@ class TestEssayAnswerAdmin(admin.ModelAdmin):
     @admin.display(description="Ребенок")
     def child(self, obj):
         return obj.assignment.child
+
+    @admin.display(description="Класс")
+    def class_number(self, obj):
+        return obj.assignment.child.class_number
 
 
 @admin.register(TestEssayAiElement)

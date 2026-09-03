@@ -41,7 +41,7 @@ def evaluate_essay(essay_text: str, class_label: str, mention_things: str, max_p
     # Промпт на русском: чётко говорим, кто ученик, что проверяем, и какой формат вывода нужен
     prompt = (
         f"Ты — преподаватель английского языка, проверяющий эссе русских школьников. "
-        f"Оцени приведённое ниже эссе на английском языке по шкале от 0 до {max_points} баллов. "
+        f"Оцени приведённое ниже эссе на английском языке по шкале от 1 до {max_points} баллов. "
         f"Учитывай, что эссе писал ученик {class_label} класса (уровень английского зависит от класса). "
         f"В эссе обязательно должны быть упомянуты следующие достопримечательности/темы: {mention_things}. "
         f"Если что-то не упомянуто или раскрыто слабо — снизь баллы. "
@@ -72,17 +72,14 @@ def evaluate_essay(essay_text: str, class_label: str, mention_things: str, max_p
     }
 
     resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
-    # resp = requests.Response({"choices": [{"message": {"content": "0"}}], "usage": {"total_tokens": 0}}, status=200)
     resp.raise_for_status()
     data = resp.json()
 
     content = data["choices"][0]["message"]["content"].strip()
 
-    # Парсим ровно одно число
     match = re.search(r"\b(\d+)\b", content)
     if not match:
-        # TODO: Сюда докинем потом логирование
-        return 0
+        raise ValueError(f"Не удалось распарсить ответ модели: {content!r}")
 
     score = int(match.group(1))
     return max(0, min(max_points, score))

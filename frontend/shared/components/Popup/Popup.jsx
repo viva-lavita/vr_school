@@ -24,6 +24,7 @@ export default function Popup({ open, onClose, children, className = "" }) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      document.body.style.overflowX = "hidden";
     };
   }, [open, onClose]);
 

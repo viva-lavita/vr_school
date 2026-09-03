@@ -4,9 +4,15 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from api.utils import is_russian
-from users.models import Child, Class, School
+from users.models import Child, Class, School, Subject
 
 User = get_user_model()
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ["pk", "name"]
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -47,8 +53,9 @@ class ChildSerializer(serializers.ModelSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance and self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
 
@@ -83,8 +90,9 @@ class UserSerializer(DjoserUserSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
 
@@ -130,8 +138,9 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
     def validate_date_of_birth(self, value):
         if not value:
             raise serializers.ValidationError("Дата рождения не может быть пустой")
-        if self.instance and self.instance.date_of_birth and value > self.instance.date_of_birth:
-            raise serializers.ValidationError("Дата рождения должна быть раньше даты регистрации")
+        from django.utils import timezone
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем")
         return value
 
     def validate_email(self, value: str):
