@@ -1,4 +1,5 @@
 from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +14,8 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAiAnswer,
+    TestEssayAiElement,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -26,11 +29,13 @@ from lessons.serializers import (
     LessonSerializer,
     TestCheckboxAnswerSerializer,
     TestDetailSerializer,
+    TestEssayAnswerAISerializer,
     TestEssayAnswerSerializer,
     TestKeyValueAnswerSerializer,
     TestQuestionAnswerSerializer,
     TestSerializer,
 )
+from lessons.tasks import evaluate_essay_with_ai
 from lessons.utils import get_key_value_table
 from users.models import Child
 
@@ -67,6 +72,8 @@ class TestViewSet(RetrieveListViewSet):
 
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["lesson__id"]
 
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными классу ребенка.
@@ -432,6 +439,102 @@ class TestEssayAnswerViewSet(CreateListViewSet):
                     )
                 updated.answer = request.data["answer"]
                 updated.save()
+            else:
+                return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return super().list(request, *args, **kwargs)
+
+
+class TestEssayAnswerAIViewSet(CreateListViewSet):
+    queryset = TestEssayAiAnswer.objects.all()
+    serializer_class = TestEssayAnswerAISerializer
+
+    def get_queryset(self):
+        child = Child.objects.get(parent=self.request.user)
+        # Ограничиваем выдачу только ответами ученика по назначенному тесту
+        return TestEssayAiAnswer.objects.filter(question=self.kwargs["question_id"], assignment__child=child)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            child = Child.objects.get(parent=self.request.user)
+        except Child.DoesNotExist:
+            return Response(
+                {"error": "У текущего пользователя нет привязанного ребёнка."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        question_id = self.kwargs.get("question_id")
+        if not question_id:
+            return Response(
+                {"error": "Не указан ID вопроса (question_id)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            question = TestEssayAiElement.objects.select_related("test").get(pk=question_id)
+        except TestEssayAiElement.DoesNotExist:
+            return Response(
+                {"error": "Вопрос не найден."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        lesson = question.test.lesson
+
+        try:
+            assignment = LessonChildAssignment.objects.select_related("class_assignment__class_name").get(
+                child=child,
+                class_assignment__lesson=lesson,
+            )
+        except LessonChildAssignment.DoesNotExist:
+            return Response(
+                {"error": "Нет активного назначения урока для этого ребёнка."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing_answer = TestEssayAiAnswer.objects.filter(
+            question=question,
+            assignment=assignment,
+        ).first()
+        if existing_answer:
+            return Response(
+                {"error": "Вы уже отправили ответ на это задание."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not assignment.in_progress:
+            assignment.in_progress = True
+            assignment.save(update_fields=["in_progress", "updated_at"])
+
+        with transaction.atomic():
+            new_answer = TestEssayAiAnswer.objects.create(
+                question=question,
+                assignment=assignment,
+                answer=request.data.get("answer", ""),  # поле answer из payload
+            )
+
+        # Запускаем асинхронную проверку
+        # TODO: добавить таску которая будет подхватывать те задания, которые не удалось проверить
+        # try:
+        evaluate_essay_with_ai.delay(new_answer.id)
+        # except Exception as e:
+        #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(TestEssayAnswerAISerializer(new_answer).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["patch"], serializer_class=TestEssayAnswerAISerializer)
+    def update_answer(self, request, *args, **kwargs):
+        """
+        Обновление ответа ученика.
+        """
+        try:
+            # на модели unique constraint,  поэтому корректно использовать first
+            updated = self.get_queryset().first()
+            if updated:
+                updated.answer = request.data["answer"]
+                updated.save()
+
+                evaluate_essay_with_ai.delay(updated.id)
             else:
                 return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

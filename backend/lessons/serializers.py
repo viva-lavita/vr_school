@@ -7,6 +7,7 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestCheckboxVariant,
+    TestEssayAiAnswer,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -275,4 +276,13 @@ class TestEssayAnswerSerializer(serializers.ModelSerializer):
             "pk",
             "answer",
             "is_verified",
+        )
+
+
+class TestEssayAnswerAISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestEssayAiAnswer
+        fields = (
+            "pk",
+            "answer",
         )

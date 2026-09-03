@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from lessons.views import (
     LessonViewSet,
     TestCheckboxAnswerViewSet,
+    TestEssayAnswerAIViewSet,
     TestEssayAnswerViewSet,
     TestKeyValueAnswerViewSet,
     TestQuestionAnswerViewSet,
@@ -24,6 +25,9 @@ router.register(
 )
 router.register(
     r"test-answers/key-value/(?P<question_id>\d+)", TestKeyValueAnswerViewSet, basename="test-key-value-answers"
+)
+router.register(
+    r"test-answers/essay-ai/(?P<question_id>\d+)", TestEssayAnswerAIViewSet, basename="test-essay-ai-answers"
 )
 
 urlpatterns = [

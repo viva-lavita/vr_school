@@ -18,36 +18,6 @@ def create_user_assignments(sender, instance, created, **kwargs):
         LessonChildAssignment.objects.bulk_create(user_assignments)
 
 
-# @receiver(post_save, sender=LessonClassAssignment)
-# def max_score_update(sender, instance, created, **kwargs):
-#     """Подсчет максимально возможного количества баллов по тесту."""
-#     if created:
-#         lesson = instance.lesson
-#         test = Test.objects.filter(lesson=lesson).all()
-#         max_score = 0
-#         for t in test:
-#             test_q_elements = TestQuestionElement.objects.filter(test=t).all()
-#             for el in test_q_elements:
-#                 max_score += el.points
-
-#             test_checkbox_elements = TestCheckboxElement.objects.filter(test=t).all()
-#             for el in test_checkbox_elements:
-#                 for variant in el.variants.all():
-#                     max_score += variant.points if variant.points > 0 else 0
-
-#             test_key_value_elements = TestKeyValueElement.objects.filter(test=t).all()
-#             for el in test_key_value_elements:
-#                 for key in el.keys.all():
-#                     max_score += key.points
-
-#             test_essay_elements = TestEssayElement.objects.filter(test=t).all()
-#             for el in test_essay_elements:
-#                 max_score += el.points
-
-#         instance.max_score = max_score
-#         instance.save()
-
-
 @receiver(post_save, sender=LessonChildAssignment)
 def completed_at_update(sender, instance, created, **kwargs):
     """

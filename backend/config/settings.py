@@ -335,7 +335,7 @@ else:
 REDIS_PORT = "6379"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BROKER_URL = f"redis://redis:{REDIS_PORT}/0"
-CELERY_BROKEN_TRANSPORT_OPTIONS = {"visibility_timeout": 3600}
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 3600}
 CELERY_TASK_ACKS_LATE = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_RESULT_BACKEND = f"redis://redis:{REDIS_PORT}/0"
@@ -348,14 +348,14 @@ if DEBUG:
         "debug_task": {"task": "api.tasks.debug_task", "schedule": crontab(minute="*/30"), "args": ()},
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": timedelta(seconds=10),  # каждые 10 секунд для тестирования
+            "schedule": crontab(minute="*/180"),  # каждые 3 часа
         },
     }
 else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": timedelta(seconds=10),  # каждые 10 секунд для тестирования
+            "schedule": crontab(minute="*/180"),  # каждые 3 часа
         },
     }
 
