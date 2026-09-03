@@ -104,6 +104,9 @@ jobs:
           echo "grade_5_percent=${{ secrets.grade_5_percent }}" >> .env
           echo "grade_4_percent=${{ secrets.grade_4_percent }}" >> .env
           echo "grade_3_percent=${{ secrets.grade_3_percent }}" >> .env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+          echo "OPENROUTER_PATH=${{ secrets.OPENROUTER_PATH }}" >> .env
+          echo "OPENROUTER_MODEL=${{ secrets.OPENROUTER_MODEL }}" >> .env
 
       - name: Upload .env
         uses: actions/upload-artifact@v4
