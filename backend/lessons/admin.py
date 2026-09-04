@@ -188,6 +188,11 @@ class TestEssayAnswerInline(admin.TabularInline):
     extra = 0
 
 
+class TestEssayAiAnswerInline(admin.TabularInline):
+    model = TestEssayAiAnswer
+    extra = 0
+
+
 @admin.register(LessonChildAssignment)
 class LessonChildAssignmentAdmin(admin.ModelAdmin):
     list_display = (
@@ -212,7 +217,13 @@ class LessonChildAssignmentAdmin(admin.ModelAdmin):
         "class_assignment__lesson__teacher__school__name",
     )
     show_facets = admin.ShowFacets.ALWAYS
-    inlines = [TestQuestionAnswerInline, TestCheckboxAnswerInline, TestKeyValueAnswerInline, TestEssayAnswerInline]
+    inlines = [
+        TestQuestionAnswerInline,
+        TestCheckboxAnswerInline,
+        TestKeyValueAnswerInline,
+        TestEssayAnswerInline,
+        TestEssayAiAnswerInline,
+    ]
     date_hierarchy = "created_at"
 
     @admin.display(description="Дедлайн")
