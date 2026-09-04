@@ -350,12 +350,20 @@ if DEBUG:
             "task": "lessons.tasks.recalculate_missing_scores",
             "schedule": crontab(minute="*/180"),  # каждые 3 часа
         },
+        "retry-unchecked-essays": {
+            "task": "lessons.tasks.retry_unchecked_essays",
+            "schedule": crontab(minute="*/180"),
+        },
     }
 else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
             "schedule": crontab(minute="*/180"),  # каждые 3 часа
+        },
+        "retry-unchecked-essays": {
+            "task": "lessons.tasks.retry_unchecked_essays",
+            "schedule": crontab(minute="*/180"),
         },
     }
 

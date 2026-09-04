@@ -1,7 +1,6 @@
 import logging
 
 from celery import shared_task
-from django.db import transaction
 from django.db.models import Sum
 
 from lessons.models import (
@@ -9,6 +8,7 @@ from lessons.models import (
     TestCheckboxAnswer,
     TestCheckboxElement,
     TestEssayAiAnswer,
+    TestEssayAiElement,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -40,6 +40,7 @@ def recalculate_missing_scores():
         expected_checkboxes = TestCheckboxElement.objects.filter(test__lesson=lesson).count()
         expected_key_value = TestKeyValueElement.objects.filter(test__lesson=lesson).count()
         expected_essays = TestEssayElement.objects.filter(test__lesson=lesson).count()
+        expected_essays_ai = TestEssayAiElement.objects.filter(test__lesson=lesson).count()
 
         # Считаем, сколько реально сделано учеником
         done_questions = TestQuestionAnswer.objects.filter(assignment=assignment).count()
@@ -49,6 +50,10 @@ def recalculate_missing_scores():
             assignment=assignment,
             is_verified=True,
         ).count()
+        done_essays_ai = TestEssayAiAnswer.objects.filter(
+            assignment=assignment,
+            points__gt=0,
+        ).count()
 
         # Проверка: все ли задания выполнены
         if not (
@@ -56,6 +61,7 @@ def recalculate_missing_scores():
             and done_checkboxes == expected_checkboxes
             and done_key_value == expected_key_value
             and done_essays == expected_essays
+            and done_essays_ai == expected_essays_ai
         ):
             continue
 
@@ -75,8 +81,14 @@ def recalculate_missing_scores():
             ]
             or 0
         )
+        essay_ai_points = (
+            TestEssayAiAnswer.objects.filter(assignment=assignment, points__gt=0).aggregate(total=Sum("points"))[
+                "total"
+            ]
+            or 0
+        )
 
-        total_points = q_points + cb_points + kv_points + essay_points
+        total_points = q_points + cb_points + kv_points + essay_points + essay_ai_points
 
         max_score = assignment.class_assignment.get_max_score()
         grade = assignment.class_assignment.get_grade(total_points) if max_score > 0 else 0
@@ -118,8 +130,16 @@ def evaluate_essay_with_ai(self, answer_id: int):
         logger.exception("Ошибка при оценке эссе answer_id=%s", answer_id)
         raise self.retry(exc=exc, countdown=60)
 
-    with transaction.atomic():
-        answer.points = points
-        answer.save(update_fields=["points", "updated_at"])
+    answer.points = points
+    answer.save(update_fields=["points", "updated_at"])
 
     return {"answer_id": answer_id, "points": points}
+
+
+@shared_task
+def retry_unchecked_essays():
+    """Раз в 3 часа перепроверяет эссе с points=0."""
+    answers = TestEssayAiAnswer.objects.filter(points=0).values_list("id", flat=True)
+    for answer_id in answers:
+        evaluate_essay_with_ai.delay(answer_id)
+    return {"retried_count": len(list(answers))}

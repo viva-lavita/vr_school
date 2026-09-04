@@ -2,13 +2,12 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import Group
 
 from users.models import Child, Class, School, Subject, Teacher, User
 
 AdminSite.empty_value_display = "-"
 
-admin.site.unregister(Group)
+# admin.site.unregister(Group)
 
 
 @admin.register(School)
@@ -38,7 +37,7 @@ class ChildAdmin(admin.ModelAdmin):
     list_display = ("id", "first_name", "last_name", "parent", "school_name", "class_name")
     search_fields = ("first_name", "last_name", "school__name", "class_number__name")
     show_facets = admin.ShowFacets.ALWAYS
-    list_filter = ("school__name",)
+    list_filter = ("class_number__name",)
     date_hierarchy = "created_at"
 
     @admin.display(description="Родитель")
@@ -129,7 +128,7 @@ class TeacherAdminForm(forms.ModelForm):
 class TeacherAdmin(admin.ModelAdmin):
     form = TeacherAdminForm
     list_display = ("id", "name", "subject", "school", "created_at")
-    search_fields = ("name", "subject__name", "school__name")
+    search_fields = ("subject__name", "school__name", "user__first_name", "user__last_name")
     show_facets = admin.ShowFacets.ALWAYS
     list_filter = ("subject__name", "school__name")
     date_hierarchy = "created_at"
@@ -137,6 +136,3 @@ class TeacherAdmin(admin.ModelAdmin):
     @admin.display(description="Преподаватель")
     def name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
-
-    # def get_queryset(self, request):
-    #     return super().get_queryset(request).filter(user__is_teacher=True)
