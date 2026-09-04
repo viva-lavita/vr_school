@@ -81,7 +81,11 @@ class LessonClassAssignment(models.Model):
         )
         essay_sum = TestEssayElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
 
-        return q_sum + cb_sum + kv_sum + essay_sum
+        essay_ai_sum = (
+            TestEssayAiElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
+        )
+
+        return q_sum + cb_sum + kv_sum + essay_sum + essay_ai_sum
 
     def get_score_percentage(self, user_score: int) -> float:
         max_score = self.get_max_score()

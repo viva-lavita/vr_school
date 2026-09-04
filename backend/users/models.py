@@ -43,12 +43,12 @@ class Class(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - ({self.school})"
 
     class Meta:
         verbose_name = "Класс"
         verbose_name_plural = "Классы"
-        ordering = ["name"]
+        ordering = ["school", "name"]
         unique_together = ("name", "school")
 
 

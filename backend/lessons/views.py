@@ -514,11 +514,11 @@ class TestEssayAnswerAIViewSet(CreateListViewSet):
             )
 
         # Запускаем асинхронную проверку
-        # TODO: добавить таску которая будет подхватывать те задания, которые не удалось проверить
-        # try:
-        evaluate_essay_with_ai.delay(new_answer.id)
-        # except Exception as e:
-        #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            evaluate_essay_with_ai.delay(new_answer.id)
+        except Exception as e:
+            # TODO: добавить сюда модельку информирования
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(TestEssayAnswerAISerializer(new_answer).data, status=status.HTTP_201_CREATED)
 
