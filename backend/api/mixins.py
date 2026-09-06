@@ -38,3 +38,9 @@ class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericV
     """Миксин только для создания и получения списка экземпляров."""
 
     pass
+
+
+class CreateViewSet(mixins.CreateModelMixin, GenericViewSet):
+    """Миксин только для создания экземпляра."""
+
+    pass
