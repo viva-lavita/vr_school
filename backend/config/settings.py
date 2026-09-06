@@ -296,7 +296,7 @@ SPECTACULAR_SETTINGS = {
 #  EMAIL
 ########################
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", default="smtp.mail.ru")
+EMAIL_HOST = os.getenv("EMAIL_HOST", default="smtp.yandex.ru")
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 

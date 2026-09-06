@@ -1,12 +1,14 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.views import health_check
+from api.views import ContactMessageCreateViewSet, health_check
 
 app_name = "api"
 
 
 router = DefaultRouter()
+
+router.register("contact-messages", ContactMessageCreateViewSet, basename="contact-messages")
 
 urlpatterns = [
     path("", include(router.urls)),
