@@ -359,11 +359,11 @@ else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": crontab(hour="*/3", minute=0),
+            "schedule": timedelta(seconds=10),
         },
         "retry-unchecked-essays": {
             "task": "lessons.tasks.retry_unchecked_essays",
-            "schedule": crontab(hour="*/3", minute=0),
+            "schedule": timedelta(seconds=10),
         },
     }
 

@@ -4,9 +4,14 @@ import { subjects, lessons } from "@/shared/data/mockLessons";
 const ITEMS_PER_PAGE = 4;
 
 function normalizeLesson(lesson) {
+  let status = "new";
+  if (lesson.is_completed) status = "completed";
+  else if (lesson.in_progress) status = "in_progress";
+
   return {
     ...lesson,
     id: lesson.pk ?? lesson.id,
+    status,
   };
 }
 
