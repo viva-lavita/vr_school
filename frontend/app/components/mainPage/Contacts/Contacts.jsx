@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Button from "@/shared/components/Button/Button";
 import Popup from "@/shared/components/Popup/Popup";
+import { apiFetch } from "@/shared/api/client";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_PATTERN = /^[а-яёА-ЯЁ\s'-]+$/;
@@ -19,7 +20,9 @@ export default function Contacts() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [sending, setSending] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -44,12 +47,30 @@ export default function Contacts() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    setSuccess(true);
-    setName("");
-    setEmail("");
-    setPhone("");
-    setComment("");
-    setConsent(false);
+    setSending(true);
+    try {
+      await apiFetch("contact-messages/", {
+        method: "POST",
+        body: {
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          comment: comment.trim(),
+          accepted_policy: true,
+        },
+        auth: false,
+      });
+      setSuccess(true);
+      setName("");
+      setEmail("");
+      setPhone("");
+      setComment("");
+      setConsent(false);
+    } catch {
+      setErrors({ submit: "Не удалось отправить сообщение. Попробуйте позже." });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -143,13 +164,15 @@ export default function Contacts() {
               </span>
             </label>
             {errors.consent && <p className="text-red text-input">{errors.consent}</p>}
+            {errors.submit && <p className="text-red text-input">{errors.submit}</p>}
 
             <div className="flex justify-center pt-2">
               <Button
                 type="submit"
-                label="Отправить"
+                label={sending ? "Отправка..." : "Отправить"}
                 width="180px"
                 labelClassName="text-button"
+                disabled={sending}
               />
             </div>
           </form>

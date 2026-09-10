@@ -7,11 +7,13 @@ import QuestionText from "./questions/QuestionText";
 import QuestionMatching from "./questions/QuestionMatching";
 import QuestionMatchingMulti from "./questions/QuestionMatchingMulti";
 import QuestionEssay from "./questions/QuestionEssay";
+import QuestionEssayAi from "./questions/QuestionEssayAi";
 import TestResults from "./TestResults";
 import {
   submitAnswer, submitCheckboxAnswer, submitEssayAnswer, submitKeyValueAnswer,
   updateAnswer, updateCheckboxAnswer, updateEssayAnswer, updateKeyValueAnswer,
   getQuestionAnswer, getCheckboxAnswers, getEssayAnswers, getKeyValueAnswers,
+  submitEssayAiAnswer, getEssayAiAnswers, updateEssayAiAnswer,
   getTestDetail,
 } from "@/shared/api/lessons";
 
@@ -67,7 +69,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
   const question = questions[currentQuestion];
   const userId = user?.pk;
   const isLast = currentQuestion === total - 1;
-  const hasEssay = questions.some((q) => q.type === "essay");
+  const hasEssay = questions.some((q) => q.type === "essay" || q.type === "essay-ai");
   const answeredCount = Object.keys(submittedAnswers).length;
   // key-value API не возвращает pk — проверяем наличие answers
   const currentAnswer = submittedAnswers[question?.id];
@@ -82,21 +84,12 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     const saved = loadTestProgress(userId, test.id);
     if (!saved) return;
 
-    const validSubmitted = {};
-    if (saved.submittedAnswers) {
-      for (const [qid, ans] of Object.entries(saved.submittedAnswers)) {
-        if (ans?.pk) validSubmitted[qid] = ans;
-      }
-    }
-
-    if (saved.allSubmitted && Object.keys(validSubmitted).length > 0) {
+    if (saved.allSubmitted) {
       setAllSubmitted(true);
-      setSubmittedAnswers(validSubmitted);
       setTouched(true);
     } else if (saved.answers && Object.keys(saved.answers).length > 0) {
       setAnswers(saved.answers);
       setCurrentQuestion(saved.currentQuestion || 0);
-      if (Object.keys(validSubmitted).length > 0) setSubmittedAnswers(validSubmitted);
       setTouched(true);
       setReturnedWithProgress(true);
     }
@@ -141,6 +134,9 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           if (data?.length > 0) existing = data[0];
         } else if (apiType === "essay") {
           const data = await getEssayAnswers(pk);
+          if (data?.length > 0) existing = data[0];
+        } else if (apiType === "essay-ai") {
+          const data = await getEssayAiAnswers(pk);
           if (data?.length > 0) existing = data[0];
         } else if (apiType === "matching") {
           const data = await getKeyValueAnswers(pk);
@@ -193,7 +189,6 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     saveTestProgress(userId, test.id, {
       answers,
       currentQuestion,
-      submittedAnswers,
       startedAt: Date.now(),
     });
   }, [userId, allSubmitted, returnedWithProgress, touched, answers, currentQuestion, submittedAnswers, test.id]);
@@ -226,6 +221,7 @@ export default function TestCard({ test, user, onBackToMaterials }) {
       return Object.keys(ans).length > 0;
     }
     if (q.type === "essay") return typeof ans === "string" && ans.trim().length > 0;
+    if (q.type === "essay-ai") return typeof ans === "string" && ans.trim().length > 0;
     return true;
   };
 
@@ -262,6 +258,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         res = hasServerPk
           ? await updateEssayAnswer(pk, ans)
           : await submitEssayAnswer(pk, ans);
+      } else if (apiType === "essay-ai") {
+        res = hasServerPk
+          ? await updateEssayAiAnswer(pk, ans)
+          : await submitEssayAiAnswer(pk, ans);
       } else if (apiType === "matching") {
         const kvAnswers = Object.entries(ans || {}).map(([k, v]) => ({
           key: question.labelIds?.[Number(k)] ?? Number(k) + 1,
@@ -298,6 +298,8 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           const apiType = question.apiType || question.type;
           if (apiType === "essay") {
             res = await updateEssayAnswer(pk, ans);
+          } else if (apiType === "essay-ai") {
+            res = await updateEssayAiAnswer(pk, ans);
           } else if (apiType === "matching") {
             const kvAnswers = Object.entries(ans || {}).map(([k, v]) => ({
               key: question.labelIds?.[Number(k)] ?? Number(k) + 1,
@@ -342,7 +344,6 @@ export default function TestCard({ test, user, onBackToMaterials }) {
         clearTestProgress(userId, test.id);
         saveTestProgress(userId, test.id, {
           allSubmitted: true,
-          submittedAnswers,
         });
       }
     }
@@ -354,10 +355,11 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     let cancelled = false;
 
     async function refetchEssays() {
-      const essayQuestions = questions.filter((q) => q.type === "essay");
+      const essayQuestions = questions.filter((q) => q.type === "essay" || q.type === "essay-ai");
       for (const q of essayQuestions) {
         try {
-          const data = await getEssayAnswers(q.pk);
+          const fetcher = q.type === "essay-ai" ? getEssayAiAnswers : getEssayAnswers;
+          const data = await fetcher(q.pk);
           if (data?.length > 0 && data[0]?.pk && !cancelled) {
             setSubmittedAnswers((prev) => ({
               ...prev,
@@ -508,6 +510,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
           )}
           {question.type === "essay" && (
             <QuestionEssay question={question} answer={answers[question.id]} disabled={isCurrentUpdated}
+              onChange={(val) => { markTouched(); setAnswers((p) => ({ ...p, [question.id]: val })); setErrors((p) => ({ ...p, [question.id]: false })); }} />
+          )}
+          {question.type === "essay-ai" && (
+            <QuestionEssayAi question={question} answer={answers[question.id]} disabled={isCurrentUpdated}
               onChange={(val) => { markTouched(); setAnswers((p) => ({ ...p, [question.id]: val })); setErrors((p) => ({ ...p, [question.id]: false })); }} />
           )}
 

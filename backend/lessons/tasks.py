@@ -96,7 +96,7 @@ def recalculate_missing_scores():
         assignment.score = grade
         if not assignment.completed_at:
             assignment.completed_at = assignment.updated_at
-        assignment.save(update_fields=["score", "completed_at"])
+        assignment.save(update_fields=["score", "completed_at", "updated_at"])
 
         count_processed += 1
 

@@ -69,6 +69,13 @@ function normalizeTestDetail(detail) {
     }
   }
 
+  if (detail.essay_ai_test) {
+    const essays = Array.isArray(detail.essay_ai_test) ? detail.essay_ai_test : [detail.essay_ai_test];
+    for (const q of essays) {
+      questions.push(normalizeTestQuestion(q, "essay-ai"));
+    }
+  }
+
   return {
     ...detail,
     id: detail.pk ?? detail.id,
@@ -244,5 +251,29 @@ export async function updateKeyValueAnswer(questionId, answers) {
   return apiFetch(`test-answers/key-value/${questionId}/update_answer/`, {
     method: "PATCH",
     body: { answers },
+  });
+}
+
+// --- Essay AI ---
+
+export async function submitEssayAiAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay-ai/${questionId}/`, {
+    method: "POST",
+    body: { answer },
+  });
+}
+
+export async function getEssayAiAnswers(questionId) {
+  try {
+    return await apiFetch(`test-answers/essay-ai/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+export async function updateEssayAiAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay-ai/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answer },
   });
 }
