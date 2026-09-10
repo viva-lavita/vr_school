@@ -5,13 +5,8 @@ export default function QuestionEssayAi({ question, answer, onChange, disabled }
   return (
     <div className="flex flex-col gap-4">
       <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
-        Напишите эссе (проверка ИИ)
+        Напишите эссе
       </p>
-      {question.mention_things && (
-        <p className="text-[#343E3D]" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "140%" }}>
-          Обязательно упомяните: {question.mention_things}
-        </p>
-      )}
       <div className="relative">
         <textarea
           maxLength={5000}

@@ -348,22 +348,22 @@ if DEBUG:
         "debug_task": {"task": "api.tasks.debug_task", "schedule": crontab(minute="*/30"), "args": ()},
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": timedelta(seconds=10),
+            "schedule": crontab(hour="*/3", minute=0),
         },
         "retry-unchecked-essays": {
             "task": "lessons.tasks.retry_unchecked_essays",
-            "schedule": timedelta(seconds=10),
+            "schedule": crontab(hour="*/3", minute=0),
         },
     }
 else:
     CELERY_BEAT_SCHEDULE = {
         "recalculate-missing-scores": {
             "task": "lessons.tasks.recalculate_missing_scores",
-            "schedule": timedelta(seconds=10),
+            "schedule": crontab(hour="*/3", minute=0),
         },
         "retry-unchecked-essays": {
             "task": "lessons.tasks.retry_unchecked_essays",
-            "schedule": timedelta(seconds=10),
+            "schedule": crontab(hour="*/3", minute=0),
         },
     }
 
