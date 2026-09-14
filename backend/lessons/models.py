@@ -376,7 +376,7 @@ class TestEssayAiElement(models.Model):
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays_ai", verbose_name="Тест")
     question = models.CharField(max_length=500, verbose_name="Вопрос")
-    points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
+    points = models.PositiveSmallIntegerField(verbose_name="Максимальное количество баллов")
     mention_things = models.CharField(max_length=500, verbose_name="Что должен упомянуть(влияет на оценку)")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
