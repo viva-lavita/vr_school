@@ -136,7 +136,7 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
                 assignment.in_progress = True
                 assignment.save()
             request.data["answer"] = request.data["answer"].strip().lower()
-            points = question.points if request.data["answer"] == question.answer else 0
+            points = question.points if request.data["answer"] == question.answer.strip().lower() else 0
             new_answer = TestQuestionAnswer.objects.create(
                 assignment=assignment, question_id=self.kwargs["question_id"], points=points, **request.data
             )
