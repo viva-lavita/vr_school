@@ -5,7 +5,6 @@ set -e
 HOST=${HOST:-0.0.0.0}
 PORT=${PORT:-8000}
 
-uv sync  # TODO: догрузка dev зависимостей, убрать, когда на проде будет DEBUG=False
 python manage.py makemigrations
 python manage.py migrate
 python manage.py collectstatic --noinput

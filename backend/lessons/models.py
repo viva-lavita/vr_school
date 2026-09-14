@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Sum
 
@@ -376,7 +377,14 @@ class TestEssayAiElement(models.Model):
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays_ai", verbose_name="Тест")
     question = models.CharField(max_length=500, verbose_name="Вопрос")
-    points = models.PositiveSmallIntegerField(verbose_name="Максимальное количество баллов")
+    points = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(32767),
+        ],
+        help_text="От 1 до 32 767",
+        verbose_name="Максимальное количество баллов",
+    )
     mention_things = models.CharField(max_length=500, verbose_name="Что должен упомянуть(влияет на оценку)")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
