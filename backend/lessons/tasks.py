@@ -4,6 +4,7 @@ from celery import shared_task
 from django.db.models import Sum
 
 from lessons.models import (
+    AiErrorRequest,
     LessonChildAssignment,
     TestCheckboxAnswer,
     TestCheckboxElement,
@@ -19,6 +20,7 @@ from lessons.models import (
 from lessons.utils import evaluate_essay
 
 logger = logging.getLogger("tasks")
+logger_ai = logging.getLogger("AI")
 
 
 @shared_task
@@ -33,72 +35,77 @@ def recalculate_missing_scores():
     count_processed = 0
 
     for assignment in assignments:
-        lesson = assignment.class_assignment.lesson
+        try:
+            lesson = assignment.class_assignment.lesson
 
-        # Считаем ожидаемое количество заданий каждого типа в уроке
-        expected_questions = TestQuestionElement.objects.filter(test__lesson=lesson).count()
-        expected_checkboxes = TestCheckboxElement.objects.filter(test__lesson=lesson).count()
-        expected_key_value = TestKeyValueElement.objects.filter(test__lesson=lesson).count()
-        expected_essays = TestEssayElement.objects.filter(test__lesson=lesson).count()
-        expected_essays_ai = TestEssayAiElement.objects.filter(test__lesson=lesson).count()
+            # Считаем ожидаемое количество заданий каждого типа в уроке
+            expected_questions = TestQuestionElement.objects.filter(test__lesson=lesson).count()
+            expected_checkboxes = TestCheckboxElement.objects.filter(test__lesson=lesson).count()
+            expected_key_value = TestKeyValueElement.objects.filter(test__lesson=lesson).count()
+            expected_essays = TestEssayElement.objects.filter(test__lesson=lesson).count()
+            expected_essays_ai = TestEssayAiElement.objects.filter(test__lesson=lesson).count()
 
-        # Считаем, сколько реально сделано учеником
-        done_questions = TestQuestionAnswer.objects.filter(assignment=assignment).count()
-        done_checkboxes = TestCheckboxAnswer.objects.filter(assignment=assignment).count()
-        done_key_value = TestKeyValueAnswer.objects.filter(assignment=assignment).count()
-        done_essays = TestEssayAnswer.objects.filter(
-            assignment=assignment,
-            is_verified=True,
-        ).count()
-        done_essays_ai = TestEssayAiAnswer.objects.filter(
-            assignment=assignment,
-            points__gt=0,
-        ).count()
+            # Считаем, сколько реально сделано учеником
+            done_questions = TestQuestionAnswer.objects.filter(assignment=assignment).count()
+            done_checkboxes = TestCheckboxAnswer.objects.filter(assignment=assignment).count()
+            done_key_value = TestKeyValueAnswer.objects.filter(assignment=assignment).count()
+            done_essays = TestEssayAnswer.objects.filter(
+                assignment=assignment,
+                is_verified=True,
+            ).count()
+            done_essays_ai = TestEssayAiAnswer.objects.filter(
+                assignment=assignment,
+                points__gt=0,
+            ).count()
 
-        # Проверка: все ли задания выполнены
-        if not (
-            done_questions == expected_questions
-            and done_checkboxes == expected_checkboxes
-            and done_key_value == expected_key_value
-            and done_essays == expected_essays
-            and done_essays_ai == expected_essays_ai
-        ):
-            continue
+            # Проверка: все ли задания выполнены
+            if not (
+                done_questions == expected_questions
+                and done_checkboxes == expected_checkboxes
+                and done_key_value == expected_key_value
+                and done_essays == expected_essays
+                and done_essays_ai == expected_essays_ai
+            ):
+                continue
 
-        logger.info(f"Recalculating score for {assignment}")
+            logger.info(f"Recalculating score for {assignment}")
 
-        # Подсчёт баллов
-        q_points = TestQuestionAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
-        cb_points = (
-            TestCheckboxAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
-        )
-        kv_points = (
-            TestKeyValueAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
-        )
-        essay_points = (
-            TestEssayAnswer.objects.filter(assignment=assignment, is_verified=True).aggregate(total=Sum("points"))[
-                "total"
-            ]
-            or 0
-        )
-        essay_ai_points = (
-            TestEssayAiAnswer.objects.filter(assignment=assignment, points__gt=0).aggregate(total=Sum("points"))[
-                "total"
-            ]
-            or 0
-        )
+            # Подсчёт баллов
+            q_points = (
+                TestQuestionAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
+            )
+            cb_points = (
+                TestCheckboxAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
+            )
+            kv_points = (
+                TestKeyValueAnswer.objects.filter(assignment=assignment).aggregate(total=Sum("points"))["total"] or 0
+            )
+            essay_points = (
+                TestEssayAnswer.objects.filter(assignment=assignment, is_verified=True).aggregate(total=Sum("points"))[
+                    "total"
+                ]
+                or 0
+            )
+            essay_ai_points = (
+                TestEssayAiAnswer.objects.filter(assignment=assignment, points__gt=0).aggregate(total=Sum("points"))[
+                    "total"
+                ]
+                or 0
+            )
 
-        total_points = q_points + cb_points + kv_points + essay_points + essay_ai_points
+            total_points = q_points + cb_points + kv_points + essay_points + essay_ai_points
 
-        max_score = assignment.class_assignment.get_max_score()
-        grade = assignment.class_assignment.get_grade(total_points) if max_score > 0 else 0
+            max_score = assignment.class_assignment.get_max_score()
+            grade = assignment.class_assignment.get_grade(total_points) if max_score > 0 else 0
 
-        assignment.score = grade
-        if not assignment.completed_at:
-            assignment.completed_at = assignment.updated_at
-        assignment.save(update_fields=["score", "completed_at"])
+            assignment.score = grade
+            if not assignment.completed_at:
+                assignment.completed_at = assignment.updated_at
+            assignment.save(update_fields=["score", "completed_at"])
 
-        count_processed += 1
+            count_processed += 1
+        except Exception as e:
+            logger.exception(f"Error recalculating score for {assignment}: {e}")
 
     logger.info(f"Finished score recalculation run. Processed {count_processed} assignments.")
 
@@ -112,6 +119,7 @@ def evaluate_essay_with_ai(self, answer_id: int):
             "assignment__child__class_number",  # ForeignKey(Class)
         ).get(pk=answer_id)
     except TestEssayAiAnswer.DoesNotExist:
+        logger.warning("Essay answer %s not found", answer_id)
         return
 
     question = answer.question
@@ -127,7 +135,13 @@ def evaluate_essay_with_ai(self, answer_id: int):
     try:
         points = evaluate_essay(essay_text, class_label, mention_things, max_points)
     except Exception as exc:
-        logger.exception("Ошибка при оценке эссе answer_id=%s", answer_id)
+        AiErrorRequest.objects.create(
+            essay_ai_answer=answer,
+            error=str(exc),
+            code=getattr(exc, "status_code", 0) if hasattr(exc, "status_code") else 0,
+        )
+        logger_ai.exception("Ошибка при оценке эссе answer_id=%s", answer_id, exc_info=exc)
+        logger.exception("Ошибка при оценке эссе answer_id=%s", answer_id, exc_info=exc)
         raise self.retry(exc=exc, countdown=60)
 
     answer.points = points
@@ -141,5 +155,14 @@ def retry_unchecked_essays():
     """Раз в 3 часа перепроверяет эссе с points=0."""
     answers = TestEssayAiAnswer.objects.filter(points=0).values_list("id", flat=True)
     for answer_id in answers:
-        evaluate_essay_with_ai.delay(answer_id)
+        try:
+            evaluate_essay_with_ai.delay(answer_id)
+        except Exception as exc:
+            logger_ai.exception("Ошибка при перепроверке эссе answer_id=%s", answer_id, exc_info=exc)
+            logger.exception("Ошибка при перепроверке эссе answer_id=%s", answer_id, exc_info=exc)
+            AiErrorRequest.objects.create(
+                essay_ai_answer_id=answer_id,
+                error=str(exc),
+                code=getattr(exc, "status_code", 0) if hasattr(exc, "status_code") else 0,
+            )
     return {"retried_count": len(list(answers))}

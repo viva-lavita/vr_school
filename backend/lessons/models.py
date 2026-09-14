@@ -414,10 +414,20 @@ class TestEssayAiAnswer(models.Model):
         return f"{self.question.question[:20]} - {self.answer[:20]}"
 
 
-# Пользователь (через Next.js фронтенд) отправляет эссе на Django API.
-# Django сохраняет черновик ответа в TestEssayAiAnswer со статусом is_verified=False, points=0.
-# Django запускает Celery‑задачу evaluate_essay_with_ai, передавая ID ответа.
-# Celery‑воркер делает запрос к OpenRouter, формирует промпт с учётом класса и обязательных достопримечательностей.
-# OpenRouter возвращает ответ; парсим из него одну цифру (оценка 0–100 или 2–5).
-# Обновляем запись в БД: points и, при необходимости, is_verified.
-# Если нужно, отправляем уведомление (email/webhook/socket) о готовности оценки.
+class AiErrorRequest(models.Model):
+    """Ошибки запросов к ИИ."""
+
+    essay_ai_answer = models.ForeignKey(
+        TestEssayAiAnswer, related_name="errors", on_delete=models.CASCADE, verbose_name="Ответ ученика"
+    )
+    error = models.TextField(verbose_name="Текст ошибки")
+    code = models.IntegerField(verbose_name="Код ошибки")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Ошибка запроса к ИИ"
+        verbose_name_plural = "Ошибки запросов к ИИ"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.essay_ai_answer.question.question[:20]} - {self.error[:20]}"

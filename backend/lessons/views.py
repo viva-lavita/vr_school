@@ -49,7 +49,7 @@ class LessonViewSet(RetrieveListViewSet):
     """
 
     serializer_class = LessonSerializer
-    permission_classes = (IsAuthenticated,)  # TODO: добавить верификацию ученика в модель юзера и пермишн сюда
+    permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
     search_fields = ("teacher__subject__id",)
 
@@ -142,7 +142,7 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             )
             return Response(TestQuestionAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["patch"], serializer_class=TestQuestionAnswerSerializer)
     def update_answer(self, request, *args, **kwargs):
@@ -160,7 +160,7 @@ class TestQuestionAnswerViewSet(CreateListViewSet):
             else:
                 return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return super().list(request, *args, **kwargs)
 
 
@@ -213,7 +213,7 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
                     new_answer.answers.add(answer)
                 return Response(TestCheckboxAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["patch"], serializer_class=TestCheckboxAnswerSerializer)
     def update_answer(self, request, *args, **kwargs):
@@ -233,7 +233,7 @@ class TestCheckboxAnswerViewSet(CreateListViewSet):
             else:
                 return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return super().list(request, *args, **kwargs)
 
 
@@ -324,7 +324,7 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
                 )
                 return Response(TestKeyValueAnswerSerializer(new_answer).data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=["patch"], serializer_class=TestKeyValueAnswerSerializer)
     def update_answer(self, request, *args, **kwargs):
@@ -381,7 +381,7 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
             else:
                 return Response({"error": "Вы еще не ответили на этот вопрос"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return super().list(request, *args, **kwargs)
 
 
@@ -506,18 +506,16 @@ class TestEssayAnswerAIViewSet(CreateListViewSet):
             assignment.in_progress = True
             assignment.save(update_fields=["in_progress", "updated_at"])
 
-        with transaction.atomic():
-            new_answer = TestEssayAiAnswer.objects.create(
-                question=question,
-                assignment=assignment,
-                answer=request.data.get("answer", ""),  # поле answer из payload
-            )
+        new_answer = TestEssayAiAnswer.objects.create(
+            question=question,
+            assignment=assignment,
+            answer=request.data.get("answer", ""),  # поле answer из payload
+        )
 
         # Запускаем асинхронную проверку
         try:
             evaluate_essay_with_ai.delay(new_answer.id)
         except Exception as e:
-            # TODO: добавить сюда модельку информирования
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(TestEssayAnswerAISerializer(new_answer).data, status=status.HTTP_201_CREATED)
