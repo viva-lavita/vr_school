@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 
 from lessons.models import (
+    AiErrorRequest,
     Lesson,
     LessonChildAssignment,
     LessonClassAssignment,
@@ -474,6 +475,27 @@ class TestEssayAiAnswerAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return super().get_queryset(request)
         return super().get_queryset(request).filter(question__test__lesson__teacher__user=request.user)
+
+
+@admin.register(AiErrorRequest)
+class AiErrorRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "child", "code", "created_at")
+    search_fields = (
+        "essay_ai_answer__question__test__name",
+        "essay_ai_answer__question__question",
+        "essay_ai_answer__assignment__child__last_name",
+    )
+    date_hierarchy = "created_at"
+    show_facets = admin.ShowFacets.ALWAYS
+
+    @admin.display(description="Ребенок")
+    def child(self, obj):
+        return obj.essay_ai_answer.assignment.child
+
+    def get_queryset(self, request):
+        if request.user.is_superuser:
+            return super().get_queryset(request)
+        return super().get_queryset(request).filter(essay_ai_answer__question__test__lesson__teacher__user=request.user)
 
 
 # Для отладки, мб пригодится
