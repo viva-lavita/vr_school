@@ -122,15 +122,20 @@ def evaluate_essay_with_ai(self, answer_id: int):
         logger.warning("Essay answer %s not found", answer_id)
         return
 
-    question = answer.question
-    child = answer.assignment.child
-    class_obj = child.class_number  # это объект Class
+    try:
+        question = answer.question
+        child = answer.assignment.child
+        class_obj = child.class_number  # это объект Class
 
-    class_label = getattr(class_obj, "name", str(class_obj))  # например, "5А"
+        class_label = getattr(class_obj, "name", str(class_obj))  # например, "5А"
 
-    essay_text = answer.answer
-    mention_things = question.mention_things
-    max_points = question.points
+        essay_text = answer.answer
+        mention_things = question.mention_things
+        max_points = question.points
+
+    except Exception as e:
+        logger.exception("Ошибка при проверке атрибутов объекта модели эссе answer_id=%s %s", answer_id, exc_info=e)
+        raise self.retry(exc=e, countdown=60)
 
     try:
         points = evaluate_essay(essay_text, class_label, mention_things, max_points)
@@ -144,6 +149,7 @@ def evaluate_essay_with_ai(self, answer_id: int):
         logger.exception("Ошибка при оценке эссе answer_id=%s", answer_id, exc_info=exc)
         raise self.retry(exc=exc, countdown=60)
 
+    logger_ai.info("AI оценил эссе answer_id=%s points=%s", answer_id, points)
     answer.points = points
     answer.save(update_fields=["points", "updated_at"])
 
@@ -158,11 +164,8 @@ def retry_unchecked_essays():
         try:
             evaluate_essay_with_ai.delay(answer_id)
         except Exception as exc:
-            logger_ai.exception("Ошибка при перепроверке эссе answer_id=%s", answer_id, exc_info=exc)
-            logger.exception("Ошибка при перепроверке эссе answer_id=%s", answer_id, exc_info=exc)
-            AiErrorRequest.objects.create(
-                essay_ai_answer_id=answer_id,
-                error=str(exc),
-                code=getattr(exc, "status_code", 0) if hasattr(exc, "status_code") else 0,
+            logger_ai.exception(
+                "Ошибка при перепроверке эссе (селери бит 3 часа) answer_id=%s", answer_id, exc_info=exc
             )
+            logger.exception("Ошибка при перепроверке эссе (селери бит 3 часа) answer_id=%s", answer_id, exc_info=exc)
     return {"retried_count": len(list(answers))}
