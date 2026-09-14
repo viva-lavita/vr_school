@@ -8,6 +8,7 @@ from lessons.models import (
     TestCheckboxElement,
     TestCheckboxVariant,
     TestEssayAiAnswer,
+    TestEssayAiElement,
     TestEssayAnswer,
     TestEssayElement,
     TestKeyValueAnswer,
@@ -82,6 +83,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
     checkbox_tests = serializers.SerializerMethodField()
     key_value_tests = serializers.SerializerMethodField()
     essay_test = serializers.SerializerMethodField()
+    essay_ai_test = serializers.SerializerMethodField()
 
     class Meta:
         model = Test
@@ -91,6 +93,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
             "checkbox_tests",
             "key_value_tests",
             "essay_test",
+            "essay_ai_test",
         )
 
     def get_q_tests(self, obj: Test):
@@ -105,6 +108,9 @@ class TestDetailSerializer(serializers.ModelSerializer):
 
     def get_essay_test(self, obj: Test):
         return TestEssayElementSerializer(TestEssayElement.objects.filter(test=obj), many=True).data
+
+    def get_essay_ai_test(self, obj: Test):
+        return TestEssayAiElementSerializer(TestEssayAiElement.objects.filter(test=obj), many=True).data
 
 
 class TestQuestionElementSerializer(serializers.ModelSerializer):
@@ -264,6 +270,17 @@ class TestEssayElementSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "question",
+        )
+
+
+class TestEssayAiElementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestEssayAiElement
+        fields = (
+            "pk",
+            "question",
+            "points",
+            "mention_things",
         )
 
 

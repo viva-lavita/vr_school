@@ -1,12 +1,16 @@
 import { apiFetch } from "@/shared/api/client";
-import { subjects, lessons } from "@/shared/data/mockLessons";
 
 const ITEMS_PER_PAGE = 4;
 
 function normalizeLesson(lesson) {
+  let status = "new";
+  if (lesson.is_completed) status = "completed";
+  else if (lesson.in_progress) status = "in_progress";
+
   return {
     ...lesson,
     id: lesson.pk ?? lesson.id,
+    status,
   };
 }
 
@@ -69,6 +73,13 @@ function normalizeTestDetail(detail) {
     }
   }
 
+  if (detail.essay_ai_test) {
+    const essays = Array.isArray(detail.essay_ai_test) ? detail.essay_ai_test : [detail.essay_ai_test];
+    for (const q of essays) {
+      questions.push(normalizeTestQuestion(q, "essay-ai"));
+    }
+  }
+
   return {
     ...detail,
     id: detail.pk ?? detail.id,
@@ -77,77 +88,46 @@ function normalizeTestDetail(detail) {
 }
 
 export async function getSubjects() {
-  try {
-    const data = await apiFetch("subject/");
-    if (data.results?.length > 0) {
-      return data.results.map((s) => ({ id: s.pk, name: s.name }));
-    }
-  } catch {
-    // fall through to mocks
-  }
-  return subjects;
+  const data = await apiFetch("subject/");
+  return data.results.map((s) => ({ id: s.pk, name: s.name }));
 }
 
 export async function getLessons({ subject, page = 1 } = {}) {
-  try {
-    const params = new URLSearchParams();
-    if (subject) params.set("search", subject);
-    params.set("page", page);
-    const data = await apiFetch(`lessons/?${params}`);
-    if (data.results?.length > 0) {
-      return {
-        results: data.results.map(normalizeLesson),
-        count: data.count ?? 0,
-        total_pages: Math.ceil((data.count ?? 0) / ITEMS_PER_PAGE),
-      };
-    }
-  } catch {
-    // fall through to mocks
-  }
-
-  let filtered = lessons;
-  if (subject) {
-    filtered = lessons.filter((l) => l.subject === Number(subject));
-  }
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  const results = filtered.slice(start, start + ITEMS_PER_PAGE);
-  return { results, count: total, total_pages: totalPages };
+  const params = new URLSearchParams();
+  if (subject) params.set("search", subject);
+  params.set("page", page);
+  const data = await apiFetch(`lessons/?${params}`);
+  return {
+    results: data.results.map(normalizeLesson),
+    count: data.count ?? 0,
+    total_pages: Math.ceil((data.count ?? 0) / ITEMS_PER_PAGE),
+  };
 }
 
 export async function getLesson(id) {
+  const lesson = await apiFetch(`lessons/${id}/`);
+  const normalized = normalizeLesson(lesson);
+
+  let tests = [];
   try {
-    const lesson = await apiFetch(`lessons/${id}/`);
-    if (lesson?.pk) {
-      const normalized = normalizeLesson(lesson);
-
-      let tests = [];
-      try {
-        const testsList = await apiFetch(`tests/?lesson=${id}`);
-        if (testsList.results?.length) {
-          tests = testsList.results.map((t) => ({
-            ...normalizeLesson(t),
-            name: t.name,
-            score: t.score ?? null,
-            questions: [], // test_detail загружается отдельно
-          }));
-        }
-      } catch {
-        // no tests
-      }
-
-      return {
-        ...normalized,
-        test_comment: normalized.test_comment ?? normalized.description ?? "",
-        tests,
-      };
+    const testsList = await apiFetch(`tests/?lesson=${id}`);
+    if (testsList.results?.length) {
+      tests = testsList.results.map((t) => ({
+        ...normalizeLesson(t),
+        name: t.name,
+        score: t.score ?? null,
+        questions: [],
+      }));
     }
   } catch {
-    // fall through to mock
+    // no tests
   }
 
-  return lessons.find((l) => l.id === Number(id)) ?? null;
+  return {
+    ...normalized,
+    test_comment: normalized.test_comment ?? normalized.description ?? "",
+    tests,
+  };
 }
 
 export async function getTestDetail(testId) {
@@ -244,5 +224,29 @@ export async function updateKeyValueAnswer(questionId, answers) {
   return apiFetch(`test-answers/key-value/${questionId}/update_answer/`, {
     method: "PATCH",
     body: { answers },
+  });
+}
+
+// --- Essay AI ---
+
+export async function submitEssayAiAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay-ai/${questionId}/`, {
+    method: "POST",
+    body: { answer },
+  });
+}
+
+export async function getEssayAiAnswers(questionId) {
+  try {
+    return await apiFetch(`test-answers/essay-ai/${questionId}/`);
+  } catch {
+    return [];
+  }
+}
+
+export async function updateEssayAiAnswer(questionId, answer) {
+  return apiFetch(`test-answers/essay-ai/${questionId}/update_answer/`, {
+    method: "PATCH",
+    body: { answer },
   });
 }
