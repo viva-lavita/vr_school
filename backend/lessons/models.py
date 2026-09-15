@@ -129,6 +129,7 @@ class LessonChildAssignment(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=("Завершен"))
     in_progress = models.BooleanField(default=False, verbose_name=("В процессе прохождения"))
     score = models.SmallIntegerField(null=True, blank=True, verbose_name=("Оценка"))
+    recommend = models.TextField(null=True, blank=True, verbose_name=("Рекомендации после прохождения"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 

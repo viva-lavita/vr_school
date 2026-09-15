@@ -61,6 +61,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class TestSerializer(serializers.ModelSerializer):
     score = serializers.SerializerMethodField()
+    recommendation = serializers.SerializerMethodField()
 
     class Meta:
         model = Test
@@ -69,6 +70,7 @@ class TestSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "score",
+            "recommendation",
         )
 
     def get_score(self, obj):
@@ -76,6 +78,12 @@ class TestSerializer(serializers.ModelSerializer):
         lesson = obj.lesson
         # На модели ограничение unique_together(class_name, lesson) поэтому first() корректен
         return LessonChildAssignment.objects.filter(child=child, class_assignment__lesson=lesson).first().score
+
+    def get_recommendation(self, obj):
+        child = self.context["child"]
+        lesson = obj.lesson
+        # На модели ограничение unique_together(class_name, lesson) поэтому first() корректен
+        return LessonChildAssignment.objects.filter(child=child, class_assignment__lesson=lesson).first().recommend
 
 
 class TestDetailSerializer(serializers.ModelSerializer):
