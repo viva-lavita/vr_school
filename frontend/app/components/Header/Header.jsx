@@ -54,7 +54,7 @@ export default function Header() {
           onClick={() => setUserMenuOpen(true)}
           className="flex items-center gap-2 justify-self-center md:ml-auto cursor-pointer"
         >
-          <span className="menu-items">{user.first_name} {user.last_name}</span>
+          <span className="menu-items">{user.child.first_name} {user.child.last_name}</span>
           <img src="/icons/ui/avatar.svg" alt="" className="size-[40px]" />
         </button>
       ) : (

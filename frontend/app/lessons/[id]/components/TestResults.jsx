@@ -85,7 +85,7 @@ export default function TestResults({ test, answers, onBackToMaterials }) {
                   </p>
                 </div>
 
-                <textarea disabled placeholder="Рекомендации" className="w-full px-4 py-3 md:px-5 md:py-4 resize-none"
+                <textarea disabled placeholder={test.recommendation || 'Рекомендации не указаны'} className="w-full px-4 py-3 md:px-5 md:py-4 resize-none"
                   style={{
                     background: "#F4F4F4", borderRadius: "12px", height: "clamp(80px, 8vw, 120px)",
                     fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "clamp(13px, 1vw + 4px, 16px)", lineHeight: "140%", color: "#343E3D",
