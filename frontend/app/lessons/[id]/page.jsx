@@ -178,9 +178,9 @@ export default function LessonPage() {
               </p>
             )}
 
-            {/* Video — responsive: 788px (1920), 530px (1024), 410px (768), 220px (360) */}
+            {/* Video — responsive: 788px (1920), 530px (1024), 410px (768), 180px (360) */}
             {lesson.video && (
-              <div className="relative w-full rounded-[26px] md:rounded-[32px] overflow-hidden bg-black xl:h-[788px] lg:h-[530px] md:h-[410px] h-[220px]">
+              <div className="relative w-full rounded-[26px] md:rounded-[32px] overflow-hidden bg-black xl:h-[788px] lg:h-[530px] md:h-[410px] h-[180px]">
                 <LessonVideo src={lesson.video} title={lesson.name} is360={lesson.is_video_360} />
               </div>
             )}
