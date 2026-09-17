@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@photo-sphere-viewer/core/index.css";
+@import "@photo-sphere-viewer/video-plugin/index.css";
 
 @theme {
   --color-bg: #ffffff;

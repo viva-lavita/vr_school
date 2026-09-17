@@ -35,6 +35,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "image",
             "is_need_vpn",
             "video",
+            "is_video_360",
             "in_progress",
             "is_completed",
         )
@@ -204,10 +205,15 @@ class TestKeyValueElementSerializer(serializers.Serializer):
     description = serializers.CharField(read_only=True)
     keys = TestKeyVariantSerializer(many=True, read_only=True)
     values = serializers.SerializerMethodField()
+    is_many_values = serializers.SerializerMethodField()
 
     def get_values(self, obj):
         qs = TestValueVariant.objects.filter(key__test_element=obj)
         return TestValueVariantSerializer(qs, many=True).data
+
+    def get_is_many_values(self, obj):
+        """Whether at least one matching target expects several values."""
+        return any(len(key.values.all()) > 1 for key in obj.keys.all())
 
 
 class AnswerMappingSerializer(serializers.Serializer):

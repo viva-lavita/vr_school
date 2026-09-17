@@ -16,8 +16,9 @@ function normalizeLesson(lesson) {
 
 function normalizeTestQuestion(q, type) {
   const pk = q.pk ?? q.id;
-  // is_many_answers: true = checkbox, false = radio
-  const isRadio = q.is_many_answers === false;
+  // Only checkbox questions use this flag to select radio vs checkbox.
+  // Matching questions use the same API field for their single/multi mode.
+  const isRadio = type === "checkbox" && q.is_many_answers === false;
   const actualType = isRadio ? "radio" : type;
 
   return {
@@ -40,6 +41,10 @@ function normalizeTestQuestion(q, type) {
           labelIds: q.keys.map((k) => k.pk ?? k.id),
           tags: (q.values || []).map((v) => v.value),
           tagIds: (q.values || []).map((v) => v.pk ?? v.id),
+          // The API derives this from the number of values assigned to each key.
+          // Keep a fallback for older API responses during a rolling deployment.
+          multi: q.is_many_values === true
+            || ((q.values?.length ?? 0) > q.keys.length),
         }
       : {}),
   };

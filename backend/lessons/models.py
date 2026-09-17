@@ -18,6 +18,11 @@ class Lesson(models.Model):
     is_need_vpn = models.BooleanField(default=False, verbose_name="Требуется VPN")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="lessons", verbose_name="Преподаватель")
     video = models.URLField(blank=True, verbose_name="Ссылка на видео")
+    is_video_360 = models.BooleanField(
+        default=False,
+        verbose_name="Видео в формате 360°",
+        help_text="Включите для прямой ссылки на equirectangular MP4/WebM. YouTube 360 определяется самим YouTube.",
+    )
     sub_description = models.TextField(blank=True, verbose_name="Дополнительное описание")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")

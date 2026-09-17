@@ -16,7 +16,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
   const addTagToZone = (zoneIndex, tagIndex) => {
     if (disabled) return;
     const updated = { ...(answer || {}) };
-    const arr = getZoneTagIndices(zoneIndex);
+    const arr = [...getZoneTagIndices(zoneIndex)];
     if (!arr.includes(tagIndex)) {
       arr.push(tagIndex);
       updated[zoneIndex] = arr;
@@ -27,7 +27,9 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
   const removeTagFromZone = (zoneIndex, tagIndex) => {
     if (disabled) return;
     const updated = { ...(answer || {}) };
-    updated[zoneIndex] = getZoneTagIndices(zoneIndex).filter((t) => t !== tagIndex);
+    const remaining = getZoneTagIndices(zoneIndex).filter((t) => t !== tagIndex);
+    if (remaining.length > 0) updated[zoneIndex] = remaining;
+    else delete updated[zoneIndex];
     onChange(updated);
   };
 
