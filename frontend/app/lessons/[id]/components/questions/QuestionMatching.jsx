@@ -1,5 +1,7 @@
 "use client";
 
+import useShuffledTagItems from "./useShuffledTagItems";
+
 /**
  * Тип задания №4 — Соответствие с ОДНИМ ответом.
  * Лейблы (зелёные) слева, зоны для ответов (оранжевые) справа.
@@ -9,6 +11,7 @@
 export default function QuestionMatching({ question, answer, onChange, draggedTag, setDraggedTag, disabled }) {
   const labels = question.labels || [];
   const tags = question.tags || [];
+  const shuffledTags = useShuffledTagItems(tags, question.id ?? question.pk);
   const placedIndices = Object.values(answer || {});
 
   const placeTag = (tagIndex) => {
@@ -40,7 +43,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
   // Рендер зоны
   const renderZone = (i) => (
     <div key={`zone-${i}`}
-      className="flex items-center justify-center rounded-xl border-2 border-[#FFB62F] h-[43px] px-4 py-3"
+      className="flex h-full min-h-[43px] items-center justify-center rounded-xl border-2 border-[#FFB62F] px-4 py-3"
       onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = "#FFF3E0"; }}
       onDragLeave={(e) => { e.currentTarget.style.background = ""; }}
       onDrop={(e) => handleDrop(i, e)}>
@@ -63,18 +66,16 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       </p>
 
       {/* Десктоп */}
-      <div className="hidden lg:flex gap-5">
-        <div className="flex flex-col gap-5 flex-1">
-          {labels.map((label, i) => (
-            <div key={i} className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+      <div className="hidden lg:grid grid-cols-2 gap-x-5 gap-y-5">
+        {labels.map((label, i) => (
+          <div key={i} className="contents">
+            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-5 flex-1">
-          {labels.map((_, i) => renderZone(i))}
-        </div>
+            {renderZone(i)}
+          </div>
+        ))}
       </div>
 
       {/* Мобилка */}
@@ -93,12 +94,12 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       {/* Теги в зелёной полоске */}
       <div className="w-full rounded-xl p-6 min-h-[79px] flex flex-wrap justify-center items-center gap-3"
         style={{ background: "#D4F9E1" }}>
-        {tags.map((tag, i) => (
-          !placedIndices.includes(i) && (
-            <button key={i} type="button" draggable
-              onDragStart={() => setDraggedTag(i)}
+        {shuffledTags.map(({ tag, originalIndex }) => (
+          !placedIndices.includes(originalIndex) && (
+            <button key={originalIndex} type="button" draggable
+              onDragStart={() => setDraggedTag(originalIndex)}
               onDragEnd={() => setDraggedTag(null)}
-              onClick={() => placeTag(i)}
+              onClick={() => placeTag(originalIndex)}
               className="px-6 py-1.5 rounded-xl cursor-pointer"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}>
               {tag}

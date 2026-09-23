@@ -56,10 +56,9 @@ class LessonViewSet(RetrieveListViewSet):
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными.
         child = Child.objects.get(parent=self.request.user)
-        assignments = LessonClassAssignment.objects.filter(class_name=child.class_number).values_list(
-            "lesson", flat=True
+        return Lesson.objects.filter(assignments__class_name=child.class_number).order_by(
+            "-assignments__created_at", "-assignments__pk"
         )
-        return Lesson.objects.filter(pk__in=assignments)
 
 
 class TestViewSet(RetrieveListViewSet):

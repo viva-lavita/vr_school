@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import useShuffledTagItems from "./useShuffledTagItems";
 
 export default function QuestionMatchingMulti({ question, answer, onChange, draggedTag, setDraggedTag, disabled }) {
   const labels = question.labels || [];
   const tags = question.tags || [];
+  const shuffledTags = useShuffledTagItems(tags, question.id ?? question.pk);
   const [selectedZone, setSelectedZone] = useState(null);
 
   // Получить индексы тегов для зоны (всегда массив)
@@ -48,7 +50,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
     return (
       <div
         key={`zone-${i}`}
-        className={`flex flex-col gap-2 rounded-xl border-2 px-4 py-3 min-h-[43px] transition-colors cursor-pointer select-none ${isSelected ? "border-[#FFB62F] bg-[#FFF3E0]" : "border-[#FFB62F]"}`}
+        className={`flex h-full min-h-[43px] flex-col gap-2 rounded-xl border-2 px-4 py-3 transition-colors cursor-pointer select-none ${isSelected ? "border-[#FFB62F] bg-[#FFF3E0]" : "border-[#FFB62F]"}`}
         style={{ touchAction: "manipulation" }}
         onClick={() => setSelectedZone(isSelected ? null : i)}
         onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = "#FFF3E0"; }}
@@ -80,18 +82,16 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
       </p>
 
       {/* Десктоп */}
-      <div className="hidden lg:flex gap-5">
-        <div className="flex flex-col gap-5 flex-1">
-          {labels.map((label, i) => (
-            <div key={i} className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+      <div className="hidden lg:grid grid-cols-2 gap-x-5 gap-y-5">
+        {labels.map((label, i) => (
+          <div key={i} className="contents">
+            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-5 flex-1">
-          {labels.map((_, i) => renderZone(i))}
-        </div>
+            {renderZone(i)}
+          </div>
+        ))}
       </div>
 
       {/* Мобилка */}
@@ -114,18 +114,18 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
       {/* Теги */}
       <div className="w-full rounded-xl p-6 min-h-[79px] flex flex-wrap justify-center items-center gap-3"
         style={{ background: "#D4F9E1" }}>
-        {tags.map((tag, i) => (
-          !allPlacedIndices.includes(i) && (
-            <button key={i} type="button" draggable
-              onDragStart={() => setDraggedTag(i)}
+        {shuffledTags.map(({ tag, originalIndex }) => (
+          !allPlacedIndices.includes(originalIndex) && (
+            <button key={originalIndex} type="button" draggable
+              onDragStart={() => setDraggedTag(originalIndex)}
               onDragEnd={() => setDraggedTag(null)}
               onClick={() => {
                 if (selectedZone !== null) {
-                  addTagToZone(selectedZone, i);
+                  addTagToZone(selectedZone, originalIndex);
                 } else {
                   for (let j = 0; j < labels.length; j++) {
                     if (getZoneTagIndices(j).length === 0) {
-                      addTagToZone(j, i);
+                      addTagToZone(j, originalIndex);
                       break;
                     }
                   }
