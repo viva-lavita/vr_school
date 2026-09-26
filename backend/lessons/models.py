@@ -30,7 +30,7 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
-        ordering = ["name"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name[:20]
@@ -391,7 +391,7 @@ class TestEssayAiElement(models.Model):
         help_text="От 1 до 32 767",
         verbose_name="Максимальное количество баллов",
     )
-    mention_things = models.CharField(max_length=500, verbose_name="Что должен упомянуть(влияет на оценку)")
+    mention_things = models.TextField(verbose_name="Что должен упомянуть(влияет на оценку)")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 

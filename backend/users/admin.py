@@ -74,6 +74,7 @@ class UserAdmin(BaseUserAdmin):
         "id",
         "first_name",
         "last_name",
+        "is_active",
         "is_staff",
         "is_teacher",
         "email",
@@ -87,6 +88,8 @@ class UserAdmin(BaseUserAdmin):
     show_facets = admin.ShowFacets.ALWAYS
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+    actions = ["activate_users", "deactivate_users"]
 
     inlines = [ChildInline]
     fieldsets = (
@@ -114,6 +117,16 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+    def activate_users(self, request, queryset):
+        queryset.update(is_active=True)
+
+    activate_users.short_description = "Активировать выбранных пользователей"
+
+    def deactivate_users(self, request, queryset):
+        queryset.update(is_active=False)
+
+    deactivate_users.short_description = "Деактивировать выбранных пользователей"
 
 
 class TeacherAdminForm(forms.ModelForm):

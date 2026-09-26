@@ -128,6 +128,11 @@ class User(AbstractUser):
         verbose_name="Преподаватель",
         default=False,
     )
+    is_active = models.BooleanField(
+        verbose_name="Активен",
+        default=False,
+        help_text="Если галочка не стоит — пользователь не сможет войти на сайт.",
+    )
     created_at = models.DateTimeField(
         verbose_name="Дата создания",
         auto_now_add=True,
