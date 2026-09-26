@@ -30,7 +30,7 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
-        ordering = ["created_at"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name[:20]
