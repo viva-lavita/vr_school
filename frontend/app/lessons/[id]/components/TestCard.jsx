@@ -217,8 +217,10 @@ export default function TestCard({ test, user, onBackToMaterials }) {
     if (q.type === "text") return typeof ans === "string" && ans.trim().length > 0;
     if (q.type === "matching") {
       if (!ans || typeof ans !== "object") return false;
-      if (q.multi) return Object.values(ans).some((v) => Array.isArray(v) ? v.length > 0 : v !== undefined);
-      return Object.keys(ans).length > 0;
+      return q.labels.every((_, index) => {
+        const value = ans[index];
+        return Array.isArray(value) ? value.length > 0 : value !== undefined;
+      });
     }
     if (q.type === "essay") return typeof ans === "string" && ans.trim().length > 0;
     if (q.type === "essay-ai") return typeof ans === "string" && ans.trim().length > 0;

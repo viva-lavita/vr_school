@@ -56,10 +56,9 @@ class LessonViewSet(RetrieveListViewSet):
     def get_queryset(self):
         # Ограничиваем выдачу только назначенными.
         child = Child.objects.get(parent=self.request.user)
-        assignments = LessonClassAssignment.objects.filter(class_name=child.class_number).values_list(
-            "lesson", flat=True
+        return Lesson.objects.filter(assignments__class_name=child.class_number).order_by(
+            "-assignments__created_at", "-assignments__pk"
         )
-        return Lesson.objects.filter(pk__in=assignments)
 
 
 class TestViewSet(RetrieveListViewSet):
@@ -291,22 +290,21 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
                 true_key_values = get_key_value_table(self.kwargs["question_id"])
                 keys = TestKeyVariant.objects.filter(test_element=self.kwargs["question_id"]).all()
                 keys_ids = set(keys.values_list("id", flat=True))
+                submitted_answers = {int(answer["key"]): set(answer["values"]) for answer in request.data["answers"]}
+                if not set(submitted_answers).issubset(keys_ids):
+                    foreign_key = next(key for key in submitted_answers if key not in keys_ids)
+                    return Response(
+                        {"error": f"Ключ с id {foreign_key} не принадлежит этому вопросу"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
                 points = 0
-                for key_value in true_key_values:
-                    for answer in request.data["answers"]:
-                        if int(answer["key"]) not in keys_ids:
-                            return Response(
-                                {"error": f"Ключ с id {answer['key']} не принадлежит этому вопросу"},
-                                status=status.HTTP_400_BAD_REQUEST,
-                            )
-                        if int(answer["key"]) == key_value["key"]:
-                            if set(answer["values"]) == set(key_value["values"]):
-                                points += keys.get(id=answer["key"]).points
-                                break  # как только нашли совпадение, то можно выходить из ближайшего цикла
-                            else:
-                                break  # ответ неверный, переходим к следующему ключу вопроса
-                        else:
-                            points = 0
+                # A matching question is graded only after every target has an answer.
+                if set(submitted_answers) == keys_ids:
+                    points_by_key = {key.id: key.points for key in keys}
+                    for key_value in true_key_values:
+                        if submitted_answers[key_value["key"]] == set(key_value["values"]):
+                            points += points_by_key[key_value["key"]]
 
                 # установка флага в процессе прохождения теста
                 lesson_pk = question.test.lesson
@@ -359,22 +357,20 @@ class TestKeyValueAnswerViewSet(CreateListViewSet):
                 true_key_values = get_key_value_table(self.kwargs["question_id"])
                 keys = TestKeyVariant.objects.filter(test_element=self.kwargs["question_id"]).all()
                 keys_ids = set(keys.values_list("id", flat=True))
+                submitted_answers = {int(answer["key"]): set(answer["values"]) for answer in request.data["answers"]}
+                if not set(submitted_answers).issubset(keys_ids):
+                    foreign_key = next(key for key in submitted_answers if key not in keys_ids)
+                    return Response(
+                        {"error": f"Ключ с id {foreign_key} не принадлежит этому вопросу"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
                 points = 0
-                for key_value in true_key_values:
-                    for answer in request.data["answers"]:
-                        if int(answer["key"]) not in keys_ids:
-                            return Response(
-                                {"error": f"Ключ с id {answer['key']} не принадлежит этому вопросу"},
-                                status=status.HTTP_400_BAD_REQUEST,
-                            )
-                        if int(answer["key"]) == key_value["key"]:
-                            if set(answer["values"]) == set(key_value["values"]):
-                                points += keys.get(id=answer["key"]).points
-                                break  # как только нашли совпадение, то можно выходить из ближайшего цикла
-                            else:
-                                break  # ответ неверный, переходим к следующему ключу вопроса
-                        else:
-                            points = 0
+                if set(submitted_answers) == keys_ids:
+                    points_by_key = {key.id: key.points for key in keys}
+                    for key_value in true_key_values:
+                        if submitted_answers[key_value["key"]] == set(key_value["values"]):
+                            points += points_by_key[key_value["key"]]
                 updated.points = points
                 updated.answers = request.data["answers"]
                 updated.save()
