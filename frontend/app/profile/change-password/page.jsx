@@ -2,42 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import Button from "@/shared/components/Button/Button";
 import Input from "@/shared/components/Input/Input";
 import Loader from "@/shared/components/Loader/Loader";
 import Popup from "@/shared/components/Popup/Popup";
-import { logoutUser, requestPasswordReset } from "@/shared/api/auth";
+import { ApiError } from "@/shared/api/client";
+import { logoutUser, requestProfilePasswordChange } from "@/shared/api/auth";
 import { useUser } from "@/shared/context/UserContext";
 
 const REQUIRED_MESSAGE = "Поле должно быть заполненным";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_ERROR = "Введите корректный email";
-
-function validateForm(formData) {
-  const fieldErrors = {};
-
-  if (!formData.email) {
-    fieldErrors.email = REQUIRED_MESSAGE;
-  } else if (!EMAIL_PATTERN.test(formData.email.trim())) {
-    fieldErrors.email = EMAIL_ERROR;
-  }
-
-  return fieldErrors;
-}
-
-const initialFormData = {
-  email: "",
-};
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { setUser } = useUser();
-  const [formData, setFormData] = useState(initialFormData);
-  const [fieldErrors, setFieldErrors] = useState({});
+  const { user, loading, setUser } = useUser();
+  const [emailInput, setEmailInput] = useState(null);
+  const [fieldError, setFieldError] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const email = emailInput ?? user?.email ?? "";
 
   const handleLogout = () => {
     logoutUser();
@@ -45,36 +31,36 @@ export default function ChangePasswordPage() {
     router.push("/");
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setFieldErrors((prev) => {
-      if (!prev[name]) return prev;
-      const next = { ...prev };
-      delete next[name];
-      return next;
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const nextFieldErrors = validateForm(formData);
-    setFieldErrors(nextFieldErrors);
-    if (Object.keys(nextFieldErrors).length > 0) {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setFieldError(REQUIRED_MESSAGE);
       return;
     }
+    if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      setFieldError("Введите корректный email");
+      return;
+    }
+    if (user?.email && trimmedEmail.toLowerCase() !== user.email.toLowerCase()) {
+      setFieldError("Укажите email вашего профиля");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
-      await requestPasswordReset({ email: formData.email.trim() });
-      setFormData(initialFormData);
+      await requestProfilePasswordChange({ email: trimmedEmail });
       setSuccess(true);
     } catch (err) {
-      if (err.status >= 500) {
-        setError("Сервер временно недоступен. Попробуйте позже.");
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Сеанс завершён. Войдите снова.");
+      } else if (err instanceof ApiError && err.status === 400) {
+        setFieldError("Укажите email вашего профиля");
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError("Слишком много запросов. Попробуйте позже.");
       } else {
-        setFormData(initialFormData);
-        setSuccess(true);
+        setError("Не удалось отправить письмо. Попробуйте позже.");
       }
     } finally {
       setSaving(false);
@@ -85,7 +71,7 @@ export default function ChangePasswordPage() {
     <>
       <div className="flex items-center justify-center flex-col">
         <div className="w-full flex flex-col-reverse md:flex-col gap-[15px] md:gap-[22px] py-7 md:pt-15 md:pb-4">
-          <p className="text-h3 text-black uppercase text-center md:text-left">Изменить пароль</p>
+          <h1 className="text-h3 text-black uppercase text-center md:text-left">Изменить пароль</h1>
           <button
             type="button"
             onClick={handleLogout}
@@ -96,49 +82,61 @@ export default function ChangePasswordPage() {
           </button>
         </div>
         <div className="w-full bg-light-green px-4 md:px-12 lg:px-15 rounded-4xl py-10 md:pb-5 mb-20">
-          {saving ? (
+          {loading || saving ? (
             <div className="flex items-center justify-center min-h-[300px]">
               <Loader size={86} />
             </div>
-          ) : (
-          <form className="flex flex-col gap-3 mx-auto md:w-[541px] lg:w-[622px] xl:w-[686px]" onSubmit={handleSubmit} noValidate>
-            <p className="text-2 text-black pb-5 text-center">
-              Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
-            </p>
-
-            {error && (
-              <p className="text-input text-red text-center pb-3">{error}</p>
-            )}
-
-            <Input
-              name="email"
-              type="email"
-              placeholder="Введите электронную почту"
-              clearable
-              value={formData.email}
-              onChange={handleChange}
-              error={Boolean(fieldErrors.email)}
-              errorMessage={fieldErrors.email}
-            />
-
-            <div className="justify-center flex pt-7">
-              <Button
-                type="submit"
-                label={saving ? "Отправка..." : "Отправить"}
-                width="182px"
-                height="51px"
-                labelClassName="text-button"
-                disabled={saving}
-              />
+          ) : !user ? (
+            <div className="text-2 text-black text-center py-12">
+              Сеанс завершён. <Link href="/login" className="underline">Войти снова</Link>
             </div>
-          </form>
+          ) : (
+            <form className="flex flex-col gap-3 mx-auto md:w-[541px] lg:w-[622px] xl:w-[686px]" onSubmit={handleSubmit} noValidate>
+              <p className="text-2 text-black pb-5 text-center">
+                Введите адрес электронной почты, который вы использовали для входа. Мы отправим на него ссылку для смены пароля.
+              </p>
+
+              {error && (
+                <p className="text-input text-red text-center pb-3" role="alert">
+                  {error} {error.startsWith("Сеанс завершён") && <Link href="/login" className="underline">Войти</Link>}
+                </p>
+              )}
+
+              <Input
+                name="email"
+                type="email"
+                placeholder="Введите электронную почту"
+                aria-label="Электронная почта"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => {
+                  setEmailInput(event.target.value);
+                  setFieldError("");
+                  setError("");
+                }}
+                error={Boolean(fieldError)}
+                errorMessage={fieldError}
+              />
+
+              <div className="justify-center flex pt-7">
+                <Button
+                  type="submit"
+                  label="Отправить"
+                  width="182px"
+                  height="51px"
+                  labelClassName="text-button"
+                  disabled={saving}
+                />
+              </div>
+            </form>
           )}
         </div>
       </div>
 
       <Popup open={success} onClose={() => setSuccess(false)}>
-        <p className="text-h4 text-black text-center">Ссылка на восстановление отправлена</p>
-        <p className="text-2 text-black text-center pt-8">Если указанный email зарегистрирован в системе, мы отправим на него письмо с инструкцией</p>
+        <p className="text-h4 text-black text-center">Ссылка для смены пароля отправлена</p>
+        <p className="text-2 text-black text-center pt-8">Проверьте электронную почту и перейдите по ссылке из письма.</p>
       </Popup>
     </>
   );

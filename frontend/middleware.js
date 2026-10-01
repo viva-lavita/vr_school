@@ -14,7 +14,7 @@ function createMockJwt() {
 }
 
 export function middleware(req) {
-    if (PUBLIC_PATHS.includes(req.nextUrl.pathname)) {
+    if (PUBLIC_PATHS.includes(req.nextUrl.pathname) || /^\/password-change\/[^/]+\/[^/]+\/?$/.test(req.nextUrl.pathname)) {
         return NextResponse.next();
     }
 

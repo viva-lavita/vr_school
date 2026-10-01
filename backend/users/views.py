@@ -1,16 +1,34 @@
 import logging
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from djoser.views import UserViewSet as DjoserUserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import filters, permissions, serializers, status
+from rest_framework import filters, permissions, serializers, status, throttling
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.mixins import RetrieveListViewSet, RetrieveUpdateViewSet
 from users.models import Child, Class, School, Subject
-from users.serializers import ChildSerializer, ClassSerializer, SchoolSerializer, SubjectSerializer
+from users.serializers import (
+    ChildSerializer,
+    ClassSerializer,
+    ProfilePasswordChangeConfirmSerializer,
+    ProfilePasswordChangeRequestSerializer,
+    SchoolSerializer,
+    SubjectSerializer,
+)
+from users.tokens import profile_password_change_token
 
 logger = logging.getLogger("django.request")
+
+
+class ProfilePasswordChangeThrottle(throttling.UserRateThrottle):
+    scope = "profile_password_change"
 
 
 class SubjectViewSet(RetrieveListViewSet):
@@ -74,6 +92,53 @@ class UserViewSet(DjoserUserViewSet):
         if self.action == "me":
             self.permission_classes = (permissions.IsAuthenticated,)
         return super().get_permissions()
+
+    @action(
+        ["post"],
+        detail=False,
+        url_path="profile_password_change",
+        permission_classes=[permissions.IsAuthenticated],
+        serializer_class=ProfilePasswordChangeRequestSerializer,
+        throttle_classes=[ProfilePasswordChangeThrottle],
+    )
+    def profile_password_change(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = profile_password_change_token.make_token(user)
+        change_url = f"{settings.FRONTEND_SITE_URL}/profile/password-change/{uid}/{token}"
+        send_mail(
+            subject=f"Смена пароля на {settings.SITE_NAME}",
+            message=(
+                f"Здравствуйте, {user.first_name or user.email}!\n\n"
+                "Для смены пароля перейдите по ссылке и введите текущий и новый пароли:\n"
+                f"{change_url}\n\n"
+                "Если вы не запрашивали смену пароля, проигнорируйте это письмо."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=render_to_string(
+                "email/profile_password_change.html",
+                {"user": user, "site_name": settings.SITE_NAME, "change_url": change_url},
+            ),
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        ["post"],
+        detail=False,
+        url_path="profile_password_change_confirm",
+        permission_classes=[permissions.IsAuthenticated],
+        serializer_class=ProfilePasswordChangeConfirmSerializer,
+    )
+    def profile_password_change_confirm(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save(update_fields=["password"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     # @action(["post"], detail=False)
     # def reset_password(self, request, *args, **kwargs):

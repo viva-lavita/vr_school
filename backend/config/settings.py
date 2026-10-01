@@ -3,6 +3,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 from platform import system
+from urllib.parse import urlsplit
 
 from celery.schedules import crontab
 from dotenv import load_dotenv
@@ -26,6 +27,12 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://127.0.0.1 http:
 DOMAIN = os.getenv("DOMAIN", default="localhost:8000")
 SITE_NAME = os.getenv("SITE_NAME", default="Django5 Template")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", default="Django5 Template <admin@localhost>")
+FRONTEND_SITE_URL = (
+    os.getenv("FRONTEND_SITE_URL")
+    or os.getenv("NEXT_PUBLIC_SITE_URL")
+    or f"{'http' if DEBUG else 'https'}://{DOMAIN}"
+).rstrip("/")
+FRONTEND_URL_PARTS = urlsplit(FRONTEND_SITE_URL)
 # при необходимости можно добавить в шаблон писем
 # DEFAULT_FROM_PHONE = os.getenv("DEFAULT_FROM_PHONE", default="+7 (000) 000-00-00")
 
@@ -176,7 +183,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "100/min", "user": "1000/min"},
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/min", "user": "1000/min", "profile_password_change": "5/hour"},
 }
 
 
@@ -187,10 +194,10 @@ AUTH_USER_MODEL = "users.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "users.validators.LatinComplexPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -222,7 +229,8 @@ DJOSER = {
         "user_create": ("api.permissions.NotIsAuthenticated",),
     },
     "EMAIL_FRONTEND_SITE_NAME": SITE_NAME,
-    "EMAIL_FRONTEND_DOMAIN": DOMAIN,
+    "EMAIL_FRONTEND_DOMAIN": FRONTEND_URL_PARTS.netloc,
+    "EMAIL_FRONTEND_PROTOCOL": FRONTEND_URL_PARTS.scheme,
     # ниже перопределив классы почтовых сообщений, можно дополнить/заменить шаблоны писем
     # см users/email.py
     "EMAIL": {
@@ -371,7 +379,7 @@ else:
 ########################
 #  LOGGING
 ########################
-LOGS_DIR = Path("/var/log/app")
+LOGS_DIR = Path(os.getenv("LOGS_DIR", "/var/log/app"))
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 

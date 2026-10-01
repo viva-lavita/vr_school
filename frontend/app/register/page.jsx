@@ -11,6 +11,7 @@ import Select from "@/shared/components/Select/Select";
 import { ApiError } from "@/shared/api/client";
 import { registerUser } from "@/shared/api/auth";
 import { getClasses, getSchools } from "@/shared/api/schools";
+import { isValidNewPassword, PASSWORD_REQUIREMENTS } from "@/shared/utils/password";
 
 const FIELD_LABELS = {
   email: "Email",
@@ -38,10 +39,6 @@ const NAME_ERROR = "Допустимые буквенные символы А-Я
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_ERROR = "Неверный email";
 
-const PASSWORD_PATTERN = /^[A-Za-z\d@#$%&*!]{8,}$/;
-const PASSWORD_ERROR =
-  "Пароль должен содержать не менее 8 символов, используйте латиницу, спецсимволы (@#$%&*!), заглавные и прописные буквы, цифры";
-
 const MIN_BIRTH_DATE = "1900-01-01";
 const MAX_BIRTH_DATE = new Date().toISOString().split("T")[0];
 
@@ -62,8 +59,8 @@ function validateForm(formData) {
     fieldErrors.email = EMAIL_ERROR;
   }
 
-  if (!fieldErrors.password && formData.password && !PASSWORD_PATTERN.test(formData.password)) {
-    fieldErrors.password = PASSWORD_ERROR;
+  if (!fieldErrors.password && formData.password && !isValidNewPassword(formData.password)) {
+    fieldErrors.password = PASSWORD_REQUIREMENTS;
   }
 
   if (formData.password && formData.re_password && formData.password !== formData.re_password) {
@@ -311,7 +308,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <p className={fieldErrors.password ? "text-red" : ""}>Пароль должен содержать не менее 8 символов, используйте латиницу, спецсимволы (@#$%&*!), заглавные и прописные буквы, цифры</p>
+            <p className={fieldErrors.password ? "text-red" : ""}>{PASSWORD_REQUIREMENTS}</p>
             <div className="pb-3">
               <Input
                 name="password"

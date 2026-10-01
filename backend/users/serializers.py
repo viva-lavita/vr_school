@@ -1,10 +1,17 @@
+from binascii import Error as BinasciiError
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from djoser.serializers import UserCreatePasswordRetypeSerializer as DjoserUserCreateSerializer
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from api.utils import is_russian
 from users.models import Child, Class, School, Subject
+from users.tokens import profile_password_change_token
 
 User = get_user_model()
 
@@ -169,3 +176,43 @@ class UserDeleteSerializer(serializers.Serializer):
     """
 
     pass
+
+
+class ProfilePasswordChangeRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if value.casefold() != self.context["request"].user.email.casefold():
+            raise serializers.ValidationError("Укажите адрес электронной почты вашего аккаунта.")
+        return value
+
+
+class ProfilePasswordChangeConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    current_password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+    re_new_password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        try:
+            uid = force_str(urlsafe_base64_decode(attrs["uid"]))
+        except (BinasciiError, ValueError, TypeError, UnicodeDecodeError, OverflowError):
+            raise serializers.ValidationError({"uid": ["Недействительная ссылка."]})
+
+        if uid != str(user.pk):
+            raise serializers.ValidationError({"uid": ["Недействительная ссылка."]})
+        if not profile_password_change_token.check_token(user, attrs["token"]):
+            raise serializers.ValidationError({"token": ["Ссылка недействительна или устарела."]})
+        if not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError({"current_password": ["Неверный текущий пароль."]})
+        if attrs["new_password"] != attrs["re_new_password"]:
+            raise serializers.ValidationError({"re_new_password": ["Новые пароли не совпадают."]})
+
+        try:
+            validate_password(attrs["new_password"], user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": exc.messages})
+
+        return attrs

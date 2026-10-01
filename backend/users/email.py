@@ -13,6 +13,7 @@ class CustomPasswordResetEmail(PasswordResetEmail):
     def get_context_data(self):
         context = super().get_context_data()
         context["site_name"] = settings.SITE_NAME
-        context["domain"] = settings.DOMAIN
+        context["domain"] = settings.FRONTEND_URL_PARTS.netloc
+        context["protocol"] = settings.FRONTEND_URL_PARTS.scheme
         context["site_email"] = settings.DEFAULT_FROM_EMAIL
         return context
