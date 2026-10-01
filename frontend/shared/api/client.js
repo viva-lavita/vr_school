@@ -1,6 +1,7 @@
 import { getAccessToken, clearTokens } from "@/shared/api/tokens";
 
-const API_URL = `${(process.env.NEXT_PUBLIC_API_URL || "https://цифроваяшкола-вр.рф/api/v1/").replace(/\/+$/, "")}/`;
+const configuredApiUrl = (process.env.NEXT_PUBLIC_API_URL || "https://цифроваяшкола-вр.рф/api/v1/").replace(/\/+$/, "");
+const API_URL = `${configuredApiUrl.replace(/\/api$/, "/api/v1")}/`;
 
 export class ApiError extends Error {
   constructor(status, data) {
