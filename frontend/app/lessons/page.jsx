@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Loader from "@/shared/components/Loader/Loader";
 import { logoutUser } from "@/shared/api/auth";
 import { useUser } from "@/shared/context/UserContext";
-import { getSubjects, getLessons } from "@/shared/api/lessons";
+import { ITEMS_PER_PAGE, getSubjects, getLessons } from "@/shared/api/lessons";
 import LessonCard from "./components/LessonCard";
 import SubjectTabs from "./components/SubjectTabs";
 import Pagination from "./components/Pagination";
@@ -20,27 +20,61 @@ export default function LessonsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingLessons, setLoadingLessons] = useState(true);
+  const [lessonsError, setLessonsError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [subjectsError, setSubjectsError] = useState("");
+  const [subjectsRetryCount, setSubjectsRetryCount] = useState(0);
 
   useEffect(() => {
-    getSubjects().then((data) => {
-      setSubjects(data);
-      if (data.length > 0) setActiveSubject(data[0].id);
-    });
-  }, []);
+    let cancelled = false;
+    setLoadingLessons(true);
+    setSubjectsError("");
+    getSubjects()
+      .then((data) => {
+        if (cancelled) return;
+        setSubjects(data);
+        if (data.length > 0) setActiveSubject(data[0].id);
+        else {
+          setSubjectsError("Нет доступных предметов.");
+          setLoadingLessons(false);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSubjectsError("Не удалось загрузить предметы.");
+        setLoadingLessons(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [subjectsRetryCount]);
 
   useEffect(() => {
     if (activeSubject === null) return;
+    let cancelled = false;
     setLoadingLessons(true);
-    getLessons({ subject: activeSubject, page: currentPage }).then((data) => {
-      setLessons(data.results);
-      setTotalPages(data.total_pages ?? Math.ceil((data.count ?? 0) / 4));
-      setLoadingLessons(false);
-    });
-  }, [activeSubject, currentPage]);
+    setLessonsError(false);
+    getLessons({ subject: activeSubject, page: currentPage })
+      .then((data) => {
+        if (cancelled) return;
+        setLessons(data.results);
+        setTotalPages(data.total_pages);
+      })
+      .catch(() => {
+        if (!cancelled) setLessonsError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLessons(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSubject, currentPage, retryCount]);
 
-  useEffect(() => {
+  const handleSubjectChange = (subjectId) => {
     setCurrentPage(1);
-  }, [activeSubject]);
+    setActiveSubject(subjectId);
+  };
 
   const handleLogout = () => {
     logoutUser();
@@ -103,7 +137,7 @@ export default function LessonsPage() {
       <SubjectTabs
         subjects={subjects}
         active={activeSubject}
-        onChange={setActiveSubject}
+        onChange={handleSubjectChange}
       />
 
       {/* Green container with cards */}
@@ -115,19 +149,32 @@ export default function LessonsPage() {
           <div className="flex justify-center py-20">
             <Loader size={60} />
           </div>
+        ) : subjectsError || lessonsError ? (
+          <div className="flex flex-col items-center gap-3 py-20">
+            <p>{subjectsError || "Не удалось загрузить уроки."}</p>
+            <button
+              type="button"
+              onClick={() => subjectsError
+                ? setSubjectsRetryCount((count) => count + 1)
+                : setRetryCount((count) => count + 1)}
+              className="underline cursor-pointer"
+            >
+              Повторить
+            </button>
+          </div>
         ) : (
           <div className="flex flex-col gap-3 mx-auto w-full max-w-[288px] md:max-w-none md:mx-0 overflow-hidden">
             {lessons.map((lesson, index) => (
               <LessonCard
                 key={lesson.id}
                 lesson={lesson}
-                number={(currentPage - 1) * 4 + index + 1}
+                number={(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
               />
             ))}
           </div>
         )}
 
-        {totalPages > 1 && (
+        {!subjectsError && !lessonsError && totalPages > 1 && (
           <Pagination
             current={currentPage}
             total={totalPages}

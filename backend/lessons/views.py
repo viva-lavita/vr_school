@@ -24,6 +24,7 @@ from lessons.models import (
     TestQuestionAnswer,
     TestQuestionElement,
 )
+from lessons.paginations import LessonPagination
 from lessons.serializers import (
     AnswersPayloadSerializer,
     LessonSerializer,
@@ -50,6 +51,7 @@ class LessonViewSet(RetrieveListViewSet):
 
     serializer_class = LessonSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = LessonPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ("teacher__subject__id",)
 

@@ -1,6 +1,6 @@
 import { apiFetch } from "@/shared/api/client";
 
-const ITEMS_PER_PAGE = 4;
+export const ITEMS_PER_PAGE = 4;
 
 function normalizeLesson(lesson) {
   let status = "new";
