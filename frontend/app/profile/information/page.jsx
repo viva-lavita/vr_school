@@ -297,7 +297,7 @@ export default function ProfileInformationPage() {
           <button
             type="button"
             onClick={() => setDeleteConfirmOpen(true)}
-            className="text-red text-input underline text-center md:text-right relative -top-[20px] cursor-pointer w-full"
+            className="text-red text-input underline self-center md:self-end relative -top-[20px] cursor-pointer"
           >
             Удалить профиль
           </button>

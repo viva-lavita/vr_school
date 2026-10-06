@@ -17,6 +17,10 @@ export default function Header() {
 
   const handleLogout = () => {
     logoutUser();
+    if (pathname === "/lessons" || pathname.startsWith("/lessons/")) {
+      window.location.assign("/");
+      return;
+    }
     setUser(null);
     setUserMenuOpen(false);
     router.push("/");

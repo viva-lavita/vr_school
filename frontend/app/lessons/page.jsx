@@ -78,7 +78,7 @@ export default function LessonsPage() {
 
   const handleLogout = () => {
     logoutUser();
-    router.push("/");
+    window.location.assign("/");
   };
 
   useEffect(() => {
