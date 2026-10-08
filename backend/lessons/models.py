@@ -391,7 +391,7 @@ class TestEssayAiElement(models.Model):
         help_text="От 1 до 32 767",
         verbose_name="Максимальное количество баллов",
     )
-    mention_things = models.TextField(verbose_name="Что должен упомянуть(влияет на оценку)")
+    mention_things = models.TextField(verbose_name="Критерии оценки (что влияет на оценку)")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 

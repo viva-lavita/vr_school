@@ -27,10 +27,6 @@ def get_key_value_table(question_id):
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = os.getenv("OPENROUTER_PATH")
 
-# TODO: под согласование:
-# Можно добавить в промпт примеры «нормы» для разных классов, например:
-# «Для 5–6 класса допустимы простые предложения и базовая лексика; для 9–11 класса ожидаем более сложную структуру и разнообразную лексику. Не требуй от пятиклассника уровня выпускника.»
-
 
 def evaluate_essay(
     essay_text: str,
