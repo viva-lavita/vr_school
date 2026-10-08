@@ -133,12 +133,15 @@ def evaluate_essay_with_ai(self, answer_id: int):
         mention_things = question.mention_things
         max_points = question.points
 
+        subject_name = question.test.lesson.teacher.subject.name
+        theme = question.test.lesson.name
+
     except Exception as e:
         logger.exception("Ошибка при проверке атрибутов объекта модели эссе answer_id=%s %s", answer_id, exc_info=e)
         raise self.retry(exc=e, countdown=60)
 
     try:
-        points = evaluate_essay(essay_text, class_label, mention_things, max_points)
+        points = evaluate_essay(essay_text, class_label, mention_things, max_points, subject_name, theme)
     except Exception as exc:
         AiErrorRequest.objects.create(
             essay_ai_answer=answer,
