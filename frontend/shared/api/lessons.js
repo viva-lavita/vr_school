@@ -130,7 +130,6 @@ export async function getLesson(id) {
 
   return {
     ...normalized,
-    test_comment: normalized.test_comment ?? normalized.description ?? "",
     tests,
   };
 }

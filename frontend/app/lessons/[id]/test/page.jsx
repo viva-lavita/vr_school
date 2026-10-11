@@ -143,7 +143,7 @@ export default function TestNotCompletedPage() {
       </div>
 
       {/* Test comment */}
-      {lesson.test_comment && (
+      {test?.description && (
         <div
           className="w-full rounded-[32px] px-4 py-4 md:px-[60px] md:py-[67px] mb-10"
           style={{ background: "#D4F9E1" }}
@@ -169,7 +169,7 @@ export default function TestNotCompletedPage() {
               lineHeight: "140%",
             }}
           >
-            {lesson.test_comment}
+            {test.description}
           </p>
         </div>
       )}

@@ -3,47 +3,46 @@
 import TestCard from "./TestCard";
 
 export default function TestTab({ lesson, user, onBackToMaterials }) {
-  const comment = lesson.test_comment;
   const tests = lesson.tests || [];
 
   return (
     <div className="flex flex-col gap-5 mb-10">
-      {/* Comment block */}
-      {comment && (
-        <div
-          className="w-full rounded-[32px] px-5 py-5 md:px-10 md:py-8"
-          style={{ background: "#D4F9E1" }}
-        >
-          <p
-            className="text-[#DB0000] pb-4"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              fontSize: "16px",
-              lineHeight: "19px",
-              textTransform: "uppercase",
-            }}
-          >
-            ! Комментарий к проверочному заданию:
-          </p>
-          <p
-            className="text-black whitespace-pre-line break-words"
-            style={{
-              fontFamily: "var(--font-body)",
-              fontWeight: 500,
-              fontSize: "16px",
-              lineHeight: "140%",
-            }}
-          >
-            {comment}
-          </p>
-        </div>
-      )}
-
       {/* Test cards */}
       {tests.length > 0 ? (
         tests.map((test) => (
-          <TestCard key={test.id} test={test} user={user} onBackToMaterials={onBackToMaterials} />
+          <div key={test.id} className="flex flex-col gap-5">
+            {test.description && (
+              <div
+                className="w-full rounded-[32px] px-5 py-5 md:px-10 md:py-8"
+                style={{ background: "#D4F9E1" }}
+              >
+                <p
+                  className="text-[#DB0000] pb-4"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "19px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ! Комментарий к проверочному заданию:
+                </p>
+                <p
+                  className="text-black whitespace-pre-line break-words"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 500,
+                    fontSize: "16px",
+                    lineHeight: "140%",
+                  }}
+                >
+                  {test.description}
+                </p>
+              </div>
+            )}
+            <TestCard test={test} user={user} onBackToMaterials={onBackToMaterials} />
+          </div>
         ))
       ) : (
         <p className="text-2 text-dark">Проверочная работа пока не добавлена</p>
