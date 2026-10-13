@@ -79,7 +79,9 @@ class LessonClassAssignment(models.Model):
 
         q_sum = TestQuestionElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("points"))["total"] or 0
         cb_sum = (
-            TestCheckboxElement.objects.filter(test__lesson=lesson).aggregate(total=Sum("variants__points"))["total"]
+            TestCheckboxElement.objects.filter(test__lesson=lesson, variants__points__gte=0).aggregate(
+                total=Sum("variants__points")
+            )["total"]
             or 0
         )
         kv_sum = (
@@ -157,7 +159,7 @@ class TestQuestionElement(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="questions", verbose_name="Тест")
     question = models.TextField(verbose_name="Вопрос")
     answer = models.CharField(max_length=20, verbose_name="Верный ответ")
-    points = models.SmallIntegerField(default=1, verbose_name="Балл")
+    points = models.PositiveSmallIntegerField(default=1, verbose_name="Балл")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -200,7 +202,7 @@ class TestQuestionAnswer(models.Model):
 
 class TestCheckboxElement(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="checkboxes", verbose_name="Тест")
-    question = models.CharField(max_length=255, verbose_name="Вопрос")
+    question = models.TextField(verbose_name="Вопрос")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -254,7 +256,7 @@ class TestCheckboxAnswer(models.Model):
 
 class TestKeyValueElement(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="key_value", verbose_name="Тест")
-    description = models.CharField(max_length=255, verbose_name="Вопрос")
+    description = models.TextField(verbose_name="Вопрос")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -326,8 +328,8 @@ class TestEssayElement(models.Model):
     """Элемент теста: эссе. Проверка преподавателем."""
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays", verbose_name="Тест")
-    question = models.CharField(max_length=500, verbose_name="Вопрос")
-    points = models.SmallIntegerField(verbose_name="Максимальное количество баллов")
+    question = models.TextField(verbose_name="Вопрос")
+    points = models.PositiveSmallIntegerField(verbose_name="Максимальное количество баллов")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -382,7 +384,7 @@ class TestEssayAiElement(models.Model):
     """Тип Эссе с проверкой ии."""
 
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="essays_ai", verbose_name="Тест")
-    question = models.CharField(max_length=500, verbose_name="Вопрос")
+    question = models.TextField(verbose_name="Вопрос")
     points = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1),
