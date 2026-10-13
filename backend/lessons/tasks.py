@@ -134,7 +134,7 @@ def evaluate_essay_with_ai(self, answer_id: int):
         max_points = question.points
 
         subject_name = question.test.lesson.teacher.subject.name
-        theme = question.test.lesson.name
+        theme = question.question
 
     except Exception as e:
         logger.exception("Ошибка при проверке атрибутов объекта модели эссе answer_id=%s %s", answer_id, exc_info=e)

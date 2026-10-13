@@ -219,7 +219,7 @@ class Child(models.Model):
     class Meta:
         verbose_name = "Ребенок"
         verbose_name_plural = "Дети"
-        ordering = ["-created_at"]  # TODO: баг?, указывается школа и класс, но у класса есть привязка к школе
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
