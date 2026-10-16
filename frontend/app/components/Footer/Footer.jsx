@@ -49,7 +49,26 @@ export default function Footer() {
 
         <div className="[grid-area:madeby] self-end flex flex-row lg:flex-col items-center lg:items-start gap-2">
           <img src="/footer-images/sot.svg" alt="Сот.рф" className="w-[42px] h-[25px]" />
-          <img src="/footer-images/made.svg" alt="Сделано в TEAMCODE" className="w-[271px] h-6" />
+          <div className="relative h-6 w-[271px] shrink-0">
+            <img src="/footer-images/made.svg" alt="" className="h-6 w-[271px]" />
+            <span className="sr-only">Сделано в</span>
+            <a
+              href="https://xn--g1ani7c.xn--p1ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-y-0 left-[70px] w-[107px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            >
+              <span className="sr-only">СОЮЗ.РФ</span>
+            </a>
+            <a
+              href="https://xn--g1ani7c.xn--p1ai/%D0%BB%D0%BA/%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B/2921529416099541128?name=%D0%A2%D0%B5%D1%85+%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D0%BD%D0%B8%D1%82%D0%B5%D0%BB%D0%B8+%D0%9C%D0%B5%D1%87%D1%82%D1%8B+%D0%9A%D0%9E%D0%94&space=622"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-y-0 left-[200px] right-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            >
+              <span className="sr-only">ТИМ КОД</span>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
