@@ -59,7 +59,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
       >
         {zoneTagIndices.map((tagIndex, ti) => (
           <span key={ti}
-            className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer w-full"
+            className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer w-full whitespace-pre-line break-words"
             onClick={(e) => { e.stopPropagation(); removeTagFromZone(i, tagIndex); }}
             style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase" }}>
             {tags[tagIndex]}
@@ -77,7 +77,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
+      <p className="text-black whitespace-pre-line break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
         {question.hint || "Перетащите все подходящие характеристики. Внимание! Каждому лейблу может соответствовать несколько тэгов!"}
       </p>
 
@@ -85,7 +85,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
       <div className="hidden lg:grid grid-cols-2 gap-x-5 gap-y-5">
         {labels.map((label, i) => (
           <div key={i} className="contents">
-            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E] whitespace-pre-line"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
@@ -98,7 +98,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
       <div className="flex flex-col lg:hidden gap-4">
         {labels.map((label, i) => (
           <div key={i} className="flex flex-col gap-2">
-            <div className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+            <div className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E] whitespace-pre-line"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(12px, 1.5vw + 4px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
@@ -131,7 +131,7 @@ export default function QuestionMatchingMulti({ question, answer, onChange, drag
                   }
                 }
               }}
-              className="px-6 py-1.5 rounded-xl cursor-pointer"
+              className="px-6 py-1.5 rounded-xl cursor-pointer whitespace-pre-line break-words"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}
             >
               {tag}

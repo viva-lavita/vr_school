@@ -23,7 +23,7 @@ export default function QuestionRadio({ question, answer, onChange, disabled }) 
               )}
             </div>
           </div>
-          <span className="text-2 text-black">{opt}</span>
+          <span className="text-2 text-black whitespace-pre-line break-words">{opt}</span>
         </label>
       ))}
     </div>

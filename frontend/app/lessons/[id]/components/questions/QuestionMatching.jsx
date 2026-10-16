@@ -48,7 +48,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       onDragLeave={(e) => { e.currentTarget.style.background = ""; }}
       onDrop={(e) => handleDrop(i, e)}>
       {answer?.[i] !== undefined && (
-        <span className="inline-flex items-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer"
+        <span className="inline-flex items-center gap-2 px-5 py-1.5 rounded-xl bg-[#22C55E] text-black cursor-pointer whitespace-pre-line break-words"
           onClick={() => removeTag(i)}
           style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase" }}>
           {tags[answer[i]]}
@@ -61,7 +61,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
   return (
     <div className="flex flex-col gap-5">
       {/* Подсказка */}
-      <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
+      <p className="text-black whitespace-pre-line break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
         {question.hint || "Перетащите названия частиц к их характеристикам"}
       </p>
 
@@ -69,7 +69,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       <div className="hidden lg:grid grid-cols-2 gap-x-5 gap-y-5">
         {labels.map((label, i) => (
           <div key={i} className="contents">
-            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+            <div className="w-full h-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E] whitespace-pre-line"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
@@ -82,7 +82,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
       <div className="flex flex-col lg:hidden gap-4">
         {labels.map((label, i) => (
           <div key={i} className="flex flex-col gap-2">
-            <div className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E]"
+            <div className="w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-[#22C55E] whitespace-pre-line"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(12px, 1.5vw + 4px, 16px)", lineHeight: "19px", textTransform: "uppercase", color: "#222222", textAlign: "center", wordBreak: "break-word" }}>
               {label}
             </div>
@@ -100,7 +100,7 @@ export default function QuestionMatching({ question, answer, onChange, draggedTa
               onDragStart={() => setDraggedTag(originalIndex)}
               onDragEnd={() => setDraggedTag(null)}
               onClick={() => placeTag(originalIndex)}
-              className="px-6 py-1.5 rounded-xl cursor-pointer"
+              className="px-6 py-1.5 rounded-xl cursor-pointer whitespace-pre-line break-words"
               style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px", lineHeight: "19px", textTransform: "uppercase", background: "#22C55E", color: "#222222" }}>
               {tag}
             </button>

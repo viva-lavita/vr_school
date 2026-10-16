@@ -13,7 +13,7 @@ export default function QuestionCheckbox({ question, answer, onChange, disabled 
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-black" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
+      <p className="text-black whitespace-pre-line break-words" style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "14px", lineHeight: "17px", textTransform: "uppercase" }}>
         {question.hint || "Выберите несколько вариантов ответа"}
       </p>
       {question.options.map((opt, i) => (
@@ -37,7 +37,7 @@ export default function QuestionCheckbox({ question, answer, onChange, disabled 
               )}
             </div>
           </div>
-          <span className="text-2 text-black">{opt}</span>
+          <span className="text-2 text-black whitespace-pre-line break-words">{opt}</span>
         </label>
       ))}
     </div>
